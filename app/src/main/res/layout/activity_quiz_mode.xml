@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".QuizModeActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="24dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="48dp"
+            android:text="@string/title_quiz_mode"
+            android:textColor="?attr/colorOnBackground"
+            android:textSize="32sp"
+            android:textStyle="bold" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnEasy"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:layout_marginBottom="16dp"
+            android:text="@string/quiz_easy"
+            app:cornerRadius="16dp"
+            app:icon="@android:drawable/btn_star_big_on" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnMedium"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:layout_marginBottom="16dp"
+            android:text="@string/quiz_medium"
+            app:cornerRadius="16dp"
+            app:icon="@android:drawable/btn_star_big_on" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnHard"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:text="@string/quiz_hard"
+            app:cornerRadius="16dp"
+            app:icon="@android:drawable/btn_star_big_on" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

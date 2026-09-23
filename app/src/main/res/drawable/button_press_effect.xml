@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- PRESSED -->
+    <item android:state_pressed="true">
+        <shape android:shape="oval">
+            <solid android:color="#444444"/> <!-- darker -->
+        </shape>
+    </item>
+
+    <!-- DEFAULT -->
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="#888888"/> <!-- normal -->
+        </shape>
+    </item>
+
+</selector>
