@@ -2,10 +2,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Camera permission -->
+    <!-- Internet permission -->
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.CAMERA"/>
-    <uses-feature android:name="android.hardware.camera" android:required="false"/>
+
+    <!-- Camera permission -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
 
     <application
         android:allowBackup="true"
@@ -18,27 +23,74 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MorseConnect">
 
-        <!-- 🔥 SETTINGS -->
-        <activity android:name=".SettingsActivity" android:exported="false"/>
+        <!-- SETTINGS -->
+        <activity
+            android:name=".SettingsActivity"
+            android:exported="false" />
 
-        <activity android:name=".ForgotPasswordActivity" android:exported="false"/>
-        <activity android:name=".SignupActivity" android:exported="false"/>
-        <activity android:name=".LoginActivity" android:exported="false"/>
+        <!-- FORGOT PASSWORD -->
+        <activity
+            android:name=".ForgotPasswordActivity"
+            android:exported="false" />
 
-        <!-- 🚀 LAUNCHER (ONLY THIS IS TRUE) -->
-        <activity android:name=".SplashActivity" android:exported="true">
+        <activity
+            android:name=".ForgotPasswordOtpActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ResetPasswordActivity"
+            android:exported="false" />
+
+        <!-- SIGN UP -->
+        <activity
+            android:name=".SignupActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".VerifyOtpActivity"
+            android:exported="false" />
+
+        <!-- LOGIN IS NOW THE LAUNCHER -->
+        <activity
+            android:name=".LoginActivity"
+            android:exported="true">
+
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
         </activity>
 
-        <activity android:name=".QuizActivity" android:exported="false"/>
-        <activity android:name=".PracticeActivity" android:exported="false"/>
-        <activity android:name=".LearnActivity" android:exported="false"/>
-        <activity android:name=".QuizModeActivity" android:exported="false"/>
-        <activity android:name=".LibraryModeActivity" android:exported="false"/>
-        <activity android:name=".MainActivity" android:exported="false"/>
+        <!-- SplashActivity is no longer the launcher -->
+        <activity
+            android:name=".SplashActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".QuizActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".PracticeActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".LearnActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".QuizModeActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".LibraryModeActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="false" />
 
     </application>
+
 </manifest>

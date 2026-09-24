@@ -35,7 +35,6 @@ public class LoginActivity extends AppCompatActivity {
         btnSignup = findViewById(R.id.btnSignup);
         txtForgot = findViewById(R.id.txtForgot);
 
-        // Forgot password
         txtForgot.setOnClickListener(v -> {
             Intent intent = new Intent(
                     LoginActivity.this,
@@ -44,7 +43,6 @@ public class LoginActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        // Back button
         getOnBackPressedDispatcher().addCallback(
                 this,
                 new androidx.activity.OnBackPressedCallback(true) {
@@ -55,10 +53,8 @@ public class LoginActivity extends AppCompatActivity {
                 }
         );
 
-        // Login
         btnLogin.setOnClickListener(v -> attemptLogin());
 
-        // Signup
         btnSignup.setOnClickListener(v -> {
             Intent intent = new Intent(
                     LoginActivity.this,
@@ -73,19 +69,15 @@ public class LoginActivity extends AppCompatActivity {
         String user = edtUser.getText().toString().trim();
         String pass = edtPass.getText().toString().trim();
 
-        // Check empty fields
         if (user.isEmpty() || pass.isEmpty()) {
-
             Toast.makeText(
                     this,
                     "Enter credentials",
                     Toast.LENGTH_SHORT
             ).show();
-
             return;
         }
 
-        // Disable login button while request is running
         btnLogin.setEnabled(false);
 
         String url =
@@ -105,19 +97,9 @@ public class LoginActivity extends AppCompatActivity {
                 new JSONObject();
 
         try {
-
-            jsonBody.put(
-                    "username",
-                    user
-            );
-
-            jsonBody.put(
-                    "password",
-                    pass
-            );
-
+            jsonBody.put("username", user);
+            jsonBody.put("password", pass);
         } catch (JSONException e) {
-
             btnLogin.setEnabled(true);
 
             Log.e(
@@ -135,10 +117,6 @@ public class LoginActivity extends AppCompatActivity {
                         url,
                         jsonBody,
 
-                        // ==========================================
-                        // SUCCESS RESPONSE
-                        // ==========================================
-
                         response -> {
 
                             btnLogin.setEnabled(true);
@@ -155,10 +133,6 @@ public class LoginActivity extends AppCompatActivity {
                                         response.getBoolean(
                                                 "success"
                                         );
-
-                                // ----------------------------------
-                                // LOGIN SUCCESSFUL
-                                // ----------------------------------
 
                                 if (success) {
 
@@ -199,13 +173,7 @@ public class LoginActivity extends AppCompatActivity {
 
                                     finish();
 
-                                }
-
-                                // ----------------------------------
-                                // LOGIN FAILED
-                                // ----------------------------------
-
-                                else {
+                                } else {
 
                                     String message =
                                             response.optString(
@@ -257,10 +225,6 @@ public class LoginActivity extends AppCompatActivity {
                             }
                         },
 
-                        // ==========================================
-                        // ERROR RESPONSE
-                        // ==========================================
-
                         error -> {
 
                             btnLogin.setEnabled(true);
@@ -279,10 +243,8 @@ public class LoginActivity extends AppCompatActivity {
                                 String responseBody =
                                         "";
 
-                                if (
-                                        error.networkResponse.data
-                                                != null
-                                ) {
+                                if (error.networkResponse.data
+                                        != null) {
 
                                     responseBody =
                                             new String(
@@ -315,10 +277,6 @@ public class LoginActivity extends AppCompatActivity {
                                                     "Login failed"
                                             );
 
-                                    // ==================================
-                                    // ACCOUNT LOCKED
-                                    // ==================================
-
                                     if (statusCode == 429) {
 
                                         int retryAfter =
@@ -339,13 +297,7 @@ public class LoginActivity extends AppCompatActivity {
                                                 Toast.LENGTH_LONG
                                         ).show();
 
-                                    }
-
-                                    // ==================================
-                                    // WRONG PASSWORD / USER NOT FOUND
-                                    // ==================================
-
-                                    else if (statusCode == 401) {
+                                    } else if (statusCode == 401) {
 
                                         int attemptsRemaining =
                                                 errorJson.optInt(
@@ -353,9 +305,7 @@ public class LoginActivity extends AppCompatActivity {
                                                         -1
                                                 );
 
-                                        if (
-                                                attemptsRemaining >= 0
-                                        ) {
+                                        if (attemptsRemaining >= 0) {
 
                                             message =
                                                     message +
@@ -377,13 +327,7 @@ public class LoginActivity extends AppCompatActivity {
                                                 Toast.LENGTH_SHORT
                                         ).show();
 
-                                    }
-
-                                    // ==================================
-                                    // BAD REQUEST
-                                    // ==================================
-
-                                    else if (statusCode == 400) {
+                                    } else if (statusCode == 400) {
 
                                         Toast.makeText(
                                                 LoginActivity.this,
@@ -391,13 +335,7 @@ public class LoginActivity extends AppCompatActivity {
                                                 Toast.LENGTH_SHORT
                                         ).show();
 
-                                    }
-
-                                    // ==================================
-                                    // SERVER ERROR
-                                    // ==================================
-
-                                    else if (statusCode >= 500) {
+                                    } else if (statusCode >= 500) {
 
                                         Toast.makeText(
                                                 LoginActivity.this,
@@ -405,13 +343,7 @@ public class LoginActivity extends AppCompatActivity {
                                                 Toast.LENGTH_LONG
                                         ).show();
 
-                                    }
-
-                                    // ==================================
-                                    // OTHER ERROR
-                                    // ==================================
-
-                                    else {
+                                    } else {
 
                                         Toast.makeText(
                                                 LoginActivity.this,
@@ -435,13 +367,7 @@ public class LoginActivity extends AppCompatActivity {
                                     ).show();
                                 }
 
-                            }
-
-                            // ==========================================
-                            // NO SERVER RESPONSE
-                            // ==========================================
-
-                            else {
+                            } else {
 
                                 Log.e(
                                         "LOGIN_ERROR",
@@ -450,15 +376,12 @@ public class LoginActivity extends AppCompatActivity {
                                         error
                                 );
 
-                                if (
-                                        error.getCause() != null
-                                ) {
+                                if (error.getCause() != null) {
 
                                     Log.e(
                                             "LOGIN_ERROR",
                                             "CAUSE: " +
-                                                    error.getCause()
-                                                            .toString(),
+                                                    error.getCause().toString(),
                                             error.getCause()
                                     );
                                 }
@@ -472,16 +395,10 @@ public class LoginActivity extends AppCompatActivity {
                         }
                 ) {
 
-                    // ==============================================
-                    // SUPABASE HEADERS
-                    // ==============================================
-
                     @Override
-                    public java.util.Map<String, String>
-                    getHeaders() {
+                    public java.util.Map<String, String> getHeaders() {
 
-                        java.util.Map<String, String>
-                                headers =
+                        java.util.Map<String, String> headers =
                                 new java.util.HashMap<>();
 
                         headers.put(
@@ -497,10 +414,6 @@ public class LoginActivity extends AppCompatActivity {
                         return headers;
                     }
                 };
-
-        // ==============================================
-        // SEND REQUEST
-        // ==============================================
 
         RequestQueue queue =
                 Volley.newRequestQueue(this);
