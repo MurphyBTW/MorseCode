@@ -84,6 +84,18 @@
             android:exported="false" />
 
         <activity
+            android:name=".DailyChallengeActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ChallengeModeActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".SignalArchitectActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".LibraryModeActivity"
             android:exported="false" />
 

@@ -1,26 +1,34 @@
 package com.example.morseconnect;
 
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
 import android.content.SharedPreferences;
 import android.hardware.camera2.CameraManager;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
-import android.media.ToneGenerator;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.animation.OvershootInterpolator;
 import android.widget.*;
+
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.material.card.MaterialCardView;
 
 import java.util.*;
 
 public class PracticeActivity extends AppCompatActivity {
 
     TextView txtQuestion, txtInput, txtOutput;
+    TextView txtSignalState, txtPressTime, txtInputCount, txtSpeedBadge, txtStreak;
     EditText edtInput;
     Button btnCheck, btnReset, btnDelete, btnMorse, btnPlayInput;
     View flashIndicator;
+    MaterialCardView signalPanel;
+    LinearLayout waveform;
 
     StringBuilder userInput = new StringBuilder();
     String correctAnswer;
@@ -29,6 +37,7 @@ public class PracticeActivity extends AppCompatActivity {
     List<String> letters;
 
     long pressStartTime;
+    int streak = 0;
 
     int wpm = 20;
     int frequency = 600;
@@ -36,8 +45,7 @@ public class PracticeActivity extends AppCompatActivity {
     int unitMs = 60;
 
     AudioTrack audioTrack;
-    Handler handler = new Handler();
-
+    final Handler handler = new Handler();
     CameraManager cameraManager;
     String cameraId;
 
@@ -53,47 +61,64 @@ public class PracticeActivity extends AppCompatActivity {
         txtQuestion = findViewById(R.id.txtQuestion);
         txtInput = findViewById(R.id.txtInput);
         txtOutput = findViewById(R.id.txtOutput);
+        txtSignalState = findViewById(R.id.txtSignalState);
+        txtPressTime = findViewById(R.id.txtPressTime);
+        txtInputCount = findViewById(R.id.txtInputCount);
+        txtSpeedBadge = findViewById(R.id.txtSpeedBadge);
+        txtStreak = findViewById(R.id.txtStreak);
 
         edtInput = findViewById(R.id.edtInput);
         btnPlayInput = findViewById(R.id.btnPlayInput);
-
         btnCheck = findViewById(R.id.btnCheck);
         btnReset = findViewById(R.id.btnReset);
         btnDelete = findViewById(R.id.btnDelete);
         btnMorse = findViewById(R.id.btnMorse);
         flashIndicator = findViewById(R.id.flashIndicator);
+        signalPanel = findViewById(R.id.signalPanel);
+        waveform = findViewById(R.id.waveform);
 
         morseMap = MorseDatabase.getMorseMap();
         letters = new ArrayList<>(morseMap.keySet());
         Collections.sort(letters);
 
         cameraManager = (CameraManager) getSystemService(CAMERA_SERVICE);
-        try { cameraId = cameraManager.getCameraIdList()[0]; } catch (Exception ignored) {}
+        try {
+            cameraId = cameraManager.getCameraIdList()[0];
+        } catch (Exception ignored) {
+            cameraId = null;
+        }
 
         loadSettings();
         generateQuestion();
+        updateSpeedBadge();
+        updateInputUi();
+        animateWaveformIdle();
 
-        //  TAP / HOLD INPUT
+        // Short press = dot, long press = dash.
         btnMorse.setOnTouchListener((v, event) -> {
-            switch (event.getAction()) {
-
+            switch (event.getActionMasked()) {
                 case MotionEvent.ACTION_DOWN:
                     pressStartTime = System.currentTimeMillis();
-                    startSignal();
+                    setSignalActive(true);
                     return true;
 
                 case MotionEvent.ACTION_UP:
-                    stopSignal();
-
                     long duration = System.currentTimeMillis() - pressStartTime;
+                    setSignalActive(false);
 
-                    if (duration < unitMs * 2) {
-                        userInput.append(".");
+                    if (duration < Math.max(unitMs * 2L, 180L)) {
+                        userInput.append('.');
                     } else {
-                        userInput.append("-");
+                        userInput.append('-');
                     }
 
-                    txtInput.setText(userInput.toString());
+                    txtPressTime.setText(duration + " ms");
+                    updateInputUi();
+                    pulseTapButton();
+                    return true;
+
+                case MotionEvent.ACTION_CANCEL:
+                    setSignalActive(false);
                     return true;
             }
             return false;
@@ -103,32 +128,55 @@ public class PracticeActivity extends AppCompatActivity {
 
         btnDelete.setOnClickListener(v -> {
             userInput.setLength(0);
-            txtInput.setText("");
+            txtPressTime.setText("0 ms");
+            txtSignalState.setText("READY");
+            txtSignalState.setTextColor(0xFF7F8BA3);
+            updateInputUi();
         });
 
         btnReset.setOnClickListener(v -> {
             userInput.setLength(0);
-            txtInput.setText("");
+            txtPressTime.setText("0 ms");
             generateQuestion();
+            txtSignalState.setText("READY");
+            txtSignalState.setTextColor(0xFF7F8BA3);
+            updateInputUi();
+            pulseQuestion();
         });
 
-        // 🔥 NEW: PLAY USER INPUT TEXT
         btnPlayInput.setOnClickListener(v -> {
-            String text = edtInput.getText().toString().toUpperCase();
+            String text = edtInput.getText().toString().toUpperCase(Locale.ROOT);
             String morse = convertToMorse(text);
+
+            if (morse.isEmpty()) {
+                txtOutput.setText("TYPE SOMETHING FIRST");
+                return;
+            }
 
             txtOutput.setText(morse);
             playMorse(morse);
         });
     }
 
-    // 🔥 TEXT → MORSE
+    private void loadSettings() {
+        SharedPreferences prefs = getSharedPreferences("MorseSettings", MODE_PRIVATE);
+        frequency = prefs.getInt("frequency", 600);
+        int volInt = prefs.getInt("volume", 80);
+        volume = volInt / 100f;
+        wpm = prefs.getInt("speed", 20);
+        unitMs = Math.max(20, 1200 / Math.max(5, wpm));
+    }
+
+    private void updateSpeedBadge() {
+        txtSpeedBadge.setText(wpm + " WPM");
+    }
+
     private String convertToMorse(String text) {
         StringBuilder result = new StringBuilder();
 
         for (char c : text.toCharArray()) {
             if (c == ' ') {
-                result.append("   "); // word gap
+                result.append("   ");
             } else {
                 String code = morseMap.get(String.valueOf(c));
                 if (code != null) {
@@ -137,27 +185,39 @@ public class PracticeActivity extends AppCompatActivity {
             }
         }
 
-        return result.toString();
+        return result.toString().trim();
     }
 
-    //  PLAY MORSE
-    private void loadSettings() {
-        SharedPreferences prefs = getSharedPreferences("MorseSettings", MODE_PRIVATE);
-        frequency = prefs.getInt("frequency", 600);
-        int volInt = prefs.getInt("volume", 80);
-        volume = volInt / 100f;
-        wpm = prefs.getInt("speed", 20);
-        unitMs = 1200 / wpm;
+    private void updateInputUi() {
+        txtInput.setText(userInput.toString());
+        int count = userInput.length();
+        txtInputCount.setText(count + (count == 1 ? " mark" : " marks"));
+    }
+
+    private void setSignalActive(boolean active) {
+        if (active) {
+            startSignal();
+            flashIndicator.setBackgroundResource(R.drawable.indicator_on_modern);
+            txtSignalState.setText("TRANSMITTING");
+            txtSignalState.setTextColor(0xFFD6A84F);
+            signalPanel.setStrokeColor(0xFFD6A84F);
+            animateWaveformActive();
+        } else {
+            stopSignal();
+            flashIndicator.setBackgroundResource(R.drawable.indicator_off_modern);
+            txtSignalState.setText("SIGNAL CAPTURED");
+            txtSignalState.setTextColor(0xFF8C7CF2);
+            signalPanel.setStrokeColor(0xFF263145);
+            animateWaveformIdle();
+        }
     }
 
     private void startSignal() {
-        stopSignal(); // Ensure previous is stopped
-        
+        stopSignal();
+
         int sampleRate = 44100;
-        // Generate a buffer that contains an integer number of cycles to avoid clicks
-        double period = (double) sampleRate / frequency;
-        int numSamples = (int) (Math.round(period) * 50); // 50 cycles
-        if (numSamples == 0) numSamples = 441;
+        double period = (double) sampleRate / Math.max(100, frequency);
+        int numSamples = Math.max(441, (int) (Math.round(period) * 50));
 
         double[] sample = new double[numSamples];
         byte[] generatedSnd = new byte[2 * numSamples];
@@ -173,56 +233,76 @@ public class PracticeActivity extends AppCompatActivity {
             generatedSnd[idx++] = (byte) ((val & 0xff00) >>> 8);
         }
 
-        audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
-                sampleRate, AudioFormat.CHANNEL_OUT_MONO,
-                AudioFormat.ENCODING_PCM_16BIT, generatedSnd.length,
-                AudioTrack.MODE_STATIC);
-        audioTrack.write(generatedSnd, 0, generatedSnd.length);
-        audioTrack.setLoopPoints(0, numSamples, -1);
-        audioTrack.play();
+        try {
+            audioTrack = new AudioTrack(
+                    AudioManager.STREAM_MUSIC,
+                    sampleRate,
+                    AudioFormat.CHANNEL_OUT_MONO,
+                    AudioFormat.ENCODING_PCM_16BIT,
+                    generatedSnd.length,
+                    AudioTrack.MODE_STATIC
+            );
+            audioTrack.write(generatedSnd, 0, generatedSnd.length);
+            audioTrack.setLoopPoints(0, numSamples, -1);
+            audioTrack.play();
+        } catch (Exception ignored) {
+            audioTrack = null;
+        }
 
-        try { cameraManager.setTorchMode(cameraId, true); } catch (Exception ignored) {}
-        flashIndicator.setBackgroundResource(R.drawable.indicator_on);
+        if (cameraManager != null && cameraId != null) {
+            try {
+                cameraManager.setTorchMode(cameraId, true);
+            } catch (Exception ignored) {
+            }
+        }
     }
 
     private void stopSignal() {
         if (audioTrack != null) {
-            audioTrack.stop();
-            audioTrack.release();
+            try {
+                audioTrack.stop();
+            } catch (Exception ignored) {
+            }
+            try {
+                audioTrack.release();
+            } catch (Exception ignored) {
+            }
             audioTrack = null;
         }
-        try { cameraManager.setTorchMode(cameraId, false); } catch (Exception ignored) {}
-        flashIndicator.setBackgroundResource(R.drawable.indicator_off);
+
+        if (cameraManager != null && cameraId != null) {
+            try {
+                cameraManager.setTorchMode(cameraId, false);
+            } catch (Exception ignored) {
+            }
+        }
     }
 
     private void playMorse(String code) {
+        handler.removeCallbacksAndMessages(null);
         long delay = 0;
 
         for (char c : code.toCharArray()) {
             if (c == '.') {
                 scheduleSignal(delay, unitMs);
-                delay += unitMs * 2;
+                delay += unitMs * 2L;
             } else if (c == '-') {
                 scheduleSignal(delay, unitMs * 3);
-                delay += (unitMs * 3) + unitMs;
+                delay += unitMs * 4L;
             } else if (c == ' ') {
-                delay += unitMs * 2;
+                delay += unitMs * 2L;
             }
         }
     }
 
     private void scheduleSignal(long start, int duration) {
-        handler.postDelayed(this::startSignal, start);
-        handler.postDelayed(this::stopSignal, start + duration);
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        loadSettings();
+        handler.postDelayed(() -> setSignalActive(true), start);
+        handler.postDelayed(() -> setSignalActive(false), start + duration);
     }
 
     private void generateQuestion() {
+        if (letters.isEmpty()) return;
+
         Random random = new Random();
         String letter = letters.get(random.nextInt(letters.size()));
         correctAnswer = morseMap.get(letter);
@@ -230,11 +310,86 @@ public class PracticeActivity extends AppCompatActivity {
     }
 
     private void checkAnswer() {
+        if (correctAnswer == null) return;
+
         if (userInput.toString().equals(correctAnswer)) {
-            Toast.makeText(this, "✅ Correct!", Toast.LENGTH_SHORT).show();
+            streak++;
+            txtStreak.setText("STREAK " + streak);
+            txtSignalState.setText("CORRECT  •  " + correctAnswer);
+            txtSignalState.setTextColor(0xFF67D7A4);
+            signalPanel.setStrokeColor(0xFF67D7A4);
+            pulseQuestion();
+            Toast.makeText(this, "Correct!", Toast.LENGTH_SHORT).show();
         } else {
-            Toast.makeText(this, "❌ Correct: " + correctAnswer, Toast.LENGTH_LONG).show();
+            streak = 0;
+            txtStreak.setText("STREAK 0");
+            txtSignalState.setText("TRY AGAIN  •  TARGET " + correctAnswer);
+            txtSignalState.setTextColor(0xFFE87575);
+            signalPanel.setStrokeColor(0xFFE87575);
+            shakeSignalPanel();
+            Toast.makeText(this, "Not quite. Try the signal again.", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void pulseTapButton() {
+        AnimatorSet set = new AnimatorSet();
+        ObjectAnimator sx = ObjectAnimator.ofFloat(btnMorse, View.SCALE_X, 0.94f, 1f);
+        ObjectAnimator sy = ObjectAnimator.ofFloat(btnMorse, View.SCALE_Y, 0.94f, 1f);
+        set.playTogether(sx, sy);
+        set.setDuration(150);
+        set.setInterpolator(new OvershootInterpolator());
+        set.start();
+    }
+
+    private void pulseQuestion() {
+        AnimatorSet set = new AnimatorSet();
+        ObjectAnimator sx = ObjectAnimator.ofFloat(txtQuestion, View.SCALE_X, 0.86f, 1f);
+        ObjectAnimator sy = ObjectAnimator.ofFloat(txtQuestion, View.SCALE_Y, 0.86f, 1f);
+        set.playTogether(sx, sy);
+        set.setDuration(260);
+        set.setInterpolator(new OvershootInterpolator());
+        set.start();
+    }
+
+    private void shakeSignalPanel() {
+        ObjectAnimator shake = ObjectAnimator.ofFloat(
+                signalPanel,
+                View.TRANSLATION_X,
+                0, -12, 12, -8, 8, -3, 3, 0
+        );
+        shake.setDuration(360);
+        shake.start();
+    }
+
+    private void animateWaveformActive() {
+        for (int i = 0; i < waveform.getChildCount(); i++) {
+            View bar = waveform.getChildAt(i);
+            float target = 0.55f + ((i % 3) * 0.2f);
+            ObjectAnimator animator = ObjectAnimator.ofFloat(bar, View.SCALE_Y, target, 1.15f, target);
+            animator.setDuration(420L + (i * 35L));
+            animator.setRepeatCount(ObjectAnimator.INFINITE);
+            animator.setRepeatMode(ObjectAnimator.REVERSE);
+            animator.start();
+            bar.setTag(animator);
+        }
+    }
+
+    private void animateWaveformIdle() {
+        for (int i = 0; i < waveform.getChildCount(); i++) {
+            View bar = waveform.getChildAt(i);
+            Object tag = bar.getTag();
+            if (tag instanceof ObjectAnimator) {
+                ((ObjectAnimator) tag).cancel();
+            }
+            bar.setScaleY(1f);
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadSettings();
+        updateSpeedBadge();
     }
 
     @Override
@@ -245,9 +400,9 @@ public class PracticeActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        handler.removeCallbacksAndMessages(null);
+        animateWaveformIdle();
+        stopSignal();
         super.onDestroy();
-        if (audioTrack != null) {
-            audioTrack.release();
-        }
     }
 }

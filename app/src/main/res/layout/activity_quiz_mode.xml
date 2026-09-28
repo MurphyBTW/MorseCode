@@ -1,59 +1,176 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/main_background"
     tools:context=".QuizModeActivity">
 
-    <LinearLayout
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:padding="24dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        android:layout_height="match_parent"
+        android:fillViewport="true">
 
-        <TextView
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="48dp"
-            android:text="@string/title_quiz_mode"
-            android:textColor="?attr/colorOnBackground"
-            android:textSize="32sp"
-            android:textStyle="bold" />
+            android:orientation="vertical"
+            android:padding="22dp">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnEasy"
-            android:layout_width="match_parent"
-            android:layout_height="64dp"
-            android:layout_marginBottom="16dp"
-            android:text="@string/quiz_easy"
-            app:cornerRadius="16dp"
-            app:icon="@android:drawable/btn_star_big_on" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="CHALLENGE STATION"
+                android:textColor="#A987E8"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.18"/>
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnMedium"
-            style="@style/Widget.Material3.Button.TonalButton"
-            android:layout_width="match_parent"
-            android:layout_height="64dp"
-            android:layout_marginBottom="16dp"
-            android:text="@string/quiz_medium"
-            app:cornerRadius="16dp"
-            app:icon="@android:drawable/btn_star_big_on" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="Choose your difficulty"
+                android:textColor="#FFFFFF"
+                android:textSize="29sp"
+                android:textStyle="bold"/>
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnHard"
-            style="@style/Widget.Material3.Button.OutlinedButton"
-            android:layout_width="match_parent"
-            android:layout_height="64dp"
-            android:text="@string/quiz_hard"
-            app:cornerRadius="16dp"
-            app:icon="@android:drawable/btn_star_big_on" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="20dp"
+                android:text="How fast can you decode the signal?"
+                android:textColor="#77849A"
+                android:textSize="14sp"/>
 
-    </LinearLayout>
+            <!-- GAME PREVIEW -->
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
+                app:cardBackgroundColor="#E610141D"
+                app:cardCornerRadius="22dp"
+                app:strokeColor="#293140"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:text=".−   −−−   .−."
+                        android:textColor="#FFB84D"
+                        android:textSize="26sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.15"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+
+                    <TextView
+                        android:text="DECODE THE SIGNAL"
+                        android:textColor="#77849A"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.16"
+                        android:layout_marginTop="8dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- EASY -->
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardBackgroundColor="#E6141822"
+                app:cardCornerRadius="22dp"
+                app:strokeColor="#3E513A"
+                app:strokeWidth="1dp">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnEasy"
+                    android:layout_width="match_parent"
+                    android:layout_height="68dp"
+                    android:text="@string/quiz_easy"
+                    android:textColor="#FFFFFF"
+                    android:textStyle="bold"
+                    android:background="@drawable/btn_settings_bg"
+                    app:backgroundTint="@null"
+                    app:cornerRadius="20dp"/>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- MEDIUM -->
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardBackgroundColor="#E6141822"
+                app:cardCornerRadius="22dp"
+                app:strokeColor="#5A4324"
+                app:strokeWidth="1dp">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnMedium"
+                    android:layout_width="match_parent"
+                    android:layout_height="68dp"
+                    android:text="@string/quiz_medium"
+                    android:textColor="#241507"
+                    android:textStyle="bold"
+                    android:background="@drawable/btn_library_bg"
+                    app:backgroundTint="@null"
+                    app:cornerRadius="20dp"/>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- HARD -->
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardBackgroundColor="#E6141822"
+                app:cardCornerRadius="22dp"
+                app:strokeColor="#4D3B72"
+                app:strokeWidth="1dp">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnHard"
+                    android:layout_width="match_parent"
+                    android:layout_height="68dp"
+                    android:text="@string/quiz_hard"
+                    android:textColor="#FFFFFF"
+                    android:textStyle="bold"
+                    android:background="@drawable/btn_quiz_bg"
+                    app:backgroundTint="@null"
+                    app:cornerRadius="20dp"/>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="22dp"
+                android:gravity="center"
+                android:text="SPEED • ACCURACY • STREAK"
+                android:textColor="#3D4656"
+                android:textSize="10sp"
+                android:letterSpacing="0.18"/>
+
+        </LinearLayout>
+
+    </ScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

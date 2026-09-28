@@ -1,8 +1,14 @@
 package com.example.morseconnect;
 
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
@@ -11,47 +17,141 @@ import androidx.appcompat.app.AppCompatActivity;
 public class MainActivity extends AppCompatActivity {
 
     Button btnLibrary, btnQuiz, btnSettings;
+    Button btnDailyChallenge, btnChallenge;
+
+    View signalLamp;
+    TextView txtSignalCode;
+
+    private final String[] signalStates = {
+            "· · ·  — —  ·",
+            "—  · — ·  · ·",
+            "· —  · · ·  —",
+            "— · ·  · —  · ·"
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //  Remove old onBackPressed override → use dispatcher instead
-        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
-            @Override
-            public void handleOnBackPressed() {
-                //  Default behavior (go back / exit app)
-                finish();
-            }
-        });
+        getOnBackPressedDispatcher().addCallback(this,
+                new OnBackPressedCallback(true) {
+                    @Override
+                    public void handleOnBackPressed() {
+                        finish();
+                    }
+                });
 
-        //  Hide back button in main (dashboard)
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         }
 
-        // ADMIN CHECK
         String role = getIntent().getStringExtra("role");
         if ("admin".equals(role)) {
-            Toast.makeText(this, "Admin Mode", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Admin Mode",
+                    Toast.LENGTH_SHORT).show();
         }
 
-        //  CONNECT BUTTONS
         btnLibrary = findViewById(R.id.btnLibrary);
         btnQuiz = findViewById(R.id.btnQuiz);
+        btnDailyChallenge = findViewById(R.id.btnDailyChallenge);
+        btnChallenge = findViewById(R.id.btnChallenge);
         btnSettings = findViewById(R.id.btnSettings);
 
-        btnLibrary.setOnClickListener(v ->
-                startActivity(new Intent(MainActivity.this, LibraryModeActivity.class))
-        );
+        signalLamp = findViewById(R.id.signalLamp);
+        txtSignalCode = findViewById(R.id.txtSignalCode);
 
-        btnQuiz.setOnClickListener(v ->
-                startActivity(new Intent(MainActivity.this, QuizModeActivity.class))
-        );
+        // Library Mode
+        btnLibrary.setOnClickListener(v -> {
+            pressAnimation(v);
+            v.postDelayed(() -> startActivity(
+                    new Intent(MainActivity.this,
+                            LibraryModeActivity.class)), 90);
+        });
 
-        btnSettings.setOnClickListener(v ->
-                startActivity(new Intent(MainActivity.this, SettingsActivity.class))
-        );
+        // Quiz Mode
+        btnQuiz.setOnClickListener(v -> {
+            pressAnimation(v);
+            v.postDelayed(() -> startActivity(
+                    new Intent(MainActivity.this,
+                            QuizModeActivity.class)), 90);
+        });
+
+        // Daily Challenge
+        btnDailyChallenge.setOnClickListener(v -> {
+            pressAnimation(v);
+            v.postDelayed(() -> startActivity(
+                    new Intent(MainActivity.this,
+                            DailyChallengeActivity.class)), 90);
+        });
+
+        // Challenge Mode
+        btnChallenge.setOnClickListener(v -> {
+            pressAnimation(v);
+            v.postDelayed(() -> startActivity(
+                    new Intent(MainActivity.this,
+                            ChallengeModeActivity.class)), 90);
+        });
+
+        // Settings
+        btnSettings.setOnClickListener(v -> {
+            pressAnimation(v);
+            v.postDelayed(() -> startActivity(
+                    new Intent(MainActivity.this,
+                            SettingsActivity.class)), 90);
+        });
+
+        startSignalAnimation();
+    }
+
+    private void pressAnimation(View view) {
+        ObjectAnimator scaleX = ObjectAnimator.ofFloat(
+                view, View.SCALE_X, 1f, 0.97f, 1f);
+
+        ObjectAnimator scaleY = ObjectAnimator.ofFloat(
+                view, View.SCALE_Y, 1f, 0.97f, 1f);
+
+        AnimatorSet set = new AnimatorSet();
+        set.playTogether(scaleX, scaleY);
+        set.setDuration(120);
+        set.setInterpolator(
+                new AccelerateDecelerateInterpolator());
+        set.start();
+    }
+
+    private void startSignalAnimation() {
+        ValueAnimator pulse = ValueAnimator.ofFloat(
+                0.55f, 1f, 0.55f);
+
+        pulse.setDuration(1200);
+        pulse.setRepeatCount(ValueAnimator.INFINITE);
+        pulse.setInterpolator(
+                new AccelerateDecelerateInterpolator());
+
+        pulse.addUpdateListener(animation -> {
+            float value =
+                    (float) animation.getAnimatedValue();
+
+            signalLamp.setAlpha(value);
+            signalLamp.setScaleX(0.94f + (value * 0.06f));
+            signalLamp.setScaleY(0.94f + (value * 0.06f));
+        });
+
+        pulse.start();
+
+        ValueAnimator codeAnimator = ValueAnimator.ofInt(
+                0, signalStates.length - 1);
+
+        codeAnimator.setDuration(4800);
+        codeAnimator.setRepeatCount(ValueAnimator.INFINITE);
+
+        codeAnimator.addUpdateListener(animation -> {
+            int index =
+                    (int) animation.getAnimatedValue();
+
+            txtSignalCode.setText(signalStates[index]);
+        });
+
+        codeAnimator.start();
     }
 }

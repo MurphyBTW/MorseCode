@@ -55,12 +55,15 @@ public class LearnActivity extends AppCompatActivity {
         loadSettings();
 
         cameraManager = (CameraManager) getSystemService(CAMERA_SERVICE);
-        try { cameraId = cameraManager.getCameraIdList()[0]; } catch (Exception ignored) {}
+        try {
+            cameraId = cameraManager.getCameraIdList()[0];
+        } catch (Exception ignored) {}
 
         // CATEGORY SPINNER
-        ArrayAdapter<String> catAdapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_spinner_item,
-                new ArrayList<>(morseData.keySet()));
+        ArrayAdapter<String> catAdapter = createSpinnerAdapter(
+                new ArrayList<>(morseData.keySet())
+        );
+
         spinnerCategory.setAdapter(catAdapter);
 
         spinnerCategory.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -69,13 +72,15 @@ public class LearnActivity extends AppCompatActivity {
                 String category = spinnerCategory.getSelectedItem().toString();
                 currentMap = morseData.get(category);
 
-                ArrayAdapter<String> itemAdapter = new ArrayAdapter<>(LearnActivity.this,
-                        android.R.layout.simple_spinner_item,
-                        new ArrayList<>(currentMap.keySet()));
+                ArrayAdapter<String> itemAdapter = createSpinnerAdapter(
+                        new ArrayList<>(currentMap.keySet())
+                );
+
                 spinnerItem.setAdapter(itemAdapter);
             }
 
-            @Override public void onNothingSelected(AdapterView<?> parent) {}
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
         });
 
         // ITEM SPINNER
@@ -87,13 +92,57 @@ public class LearnActivity extends AppCompatActivity {
                 txtMorse.setText(currentMap.get(key));
             }
 
-            @Override public void onNothingSelected(AdapterView<?> parent) {}
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
         });
 
         btnPlay.setOnClickListener(v -> {
             String code = currentMap.get(txtLetter.getText().toString());
             playMorse(code);
         });
+    }
+
+    // SPINNER ADAPTER
+    // Makes both the selected text and dropdown options white.
+    private ArrayAdapter<String> createSpinnerAdapter(ArrayList<String> items) {
+
+        return new ArrayAdapter<String>(
+                this,
+                android.R.layout.simple_spinner_item,
+                items
+        ) {
+            @Override
+            public View getView(int position, View convertView, android.view.ViewGroup parent) {
+
+                TextView textView = (TextView) super.getView(position, convertView, parent);
+
+                // Selected Spinner text
+                textView.setTextColor(0xFFFFFFFF);
+                textView.setTextSize(15);
+
+                return textView;
+            }
+
+            @Override
+            public View getDropDownView(
+                    int position,
+                    View convertView,
+                    android.view.ViewGroup parent
+            ) {
+
+                TextView textView = (TextView) super.getDropDownView(
+                        position,
+                        convertView,
+                        parent
+                );
+
+                // Dropdown option text
+                textView.setTextColor(0xFFFFFFFF);
+                textView.setTextSize(15);
+
+                return textView;
+            }
+        };
     }
 
     private void loadSettings() {
@@ -142,21 +191,30 @@ public class LearnActivity extends AppCompatActivity {
         }
 
         int idx = 0;
+
         for (double dVal : sample) {
             short val = (short) (dVal * 32767 * volume);
             generatedSnd[idx++] = (byte) (val & 0x00ff);
             generatedSnd[idx++] = (byte) ((val & 0xff00) >>> 8);
         }
 
-        audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
-                sampleRate, AudioFormat.CHANNEL_OUT_MONO,
-                AudioFormat.ENCODING_PCM_16BIT, generatedSnd.length,
-                AudioTrack.MODE_STATIC);
+        audioTrack = new AudioTrack(
+                AudioManager.STREAM_MUSIC,
+                sampleRate,
+                AudioFormat.CHANNEL_OUT_MONO,
+                AudioFormat.ENCODING_PCM_16BIT,
+                generatedSnd.length,
+                AudioTrack.MODE_STATIC
+        );
+
         audioTrack.write(generatedSnd, 0, generatedSnd.length);
         audioTrack.setLoopPoints(0, numSamples, -1);
         audioTrack.play();
 
-        try { cameraManager.setTorchMode(cameraId, true); } catch (Exception ignored) {}
+        try {
+            cameraManager.setTorchMode(cameraId, true);
+        } catch (Exception ignored) {}
+
         flashIndicator.setBackgroundResource(R.drawable.indicator_on);
     }
 
@@ -166,7 +224,11 @@ public class LearnActivity extends AppCompatActivity {
             audioTrack.release();
             audioTrack = null;
         }
-        try { cameraManager.setTorchMode(cameraId, false); } catch (Exception ignored) {}
+
+        try {
+            cameraManager.setTorchMode(cameraId, false);
+        } catch (Exception ignored) {}
+
         flashIndicator.setBackgroundResource(R.drawable.indicator_off);
     }
 
@@ -179,6 +241,7 @@ public class LearnActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
         if (audioTrack != null) {
             audioTrack.release();
         }
