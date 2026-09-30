@@ -6,6 +6,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
     android:background="@drawable/main_background"
     tools:context=".SignupActivity">
 
@@ -93,12 +94,65 @@
                         android:textColor="#77849A"
                         android:textSize="13sp"/>
 
+                    <!-- FIRST NAME -->
                     <com.google.android.material.textfield.TextInputLayout
                         style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="13dp"
-                        android:hint="@string/hint_new_username"
+                        android:hint="First name"
+                        app:hintTextColor="#8290A8"
+                        app:boxBackgroundColor="#10151F"
+                        app:boxStrokeColor="#344052"
+                        app:boxCornerRadiusTopStart="16dp"
+                        app:boxCornerRadiusTopEnd="16dp"
+                        app:boxCornerRadiusBottomStart="16dp"
+                        app:boxCornerRadiusBottomEnd="16dp">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/edtFirstName"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="textPersonName|textCapWords"
+                            android:maxLines="1"
+                            android:textColor="#FFFFFF"
+                            android:textColorHint="#667085"/>
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- LAST NAME -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="13dp"
+                        android:hint="Last name"
+                        app:hintTextColor="#8290A8"
+                        app:boxBackgroundColor="#10151F"
+                        app:boxStrokeColor="#344052"
+                        app:boxCornerRadiusTopStart="16dp"
+                        app:boxCornerRadiusTopEnd="16dp"
+                        app:boxCornerRadiusBottomStart="16dp"
+                        app:boxCornerRadiusBottomEnd="16dp">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/edtLastName"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="textPersonName|textCapWords"
+                            android:maxLines="1"
+                            android:textColor="#FFFFFF"
+                            android:textColorHint="#667085"/>
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- USERNAME -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="13dp"
+                        android:hint="Username"
                         app:hintTextColor="#8290A8"
                         app:boxBackgroundColor="#10151F"
                         app:boxStrokeColor="#344052"
@@ -111,12 +165,14 @@
                             android:id="@+id/edtUser"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:inputType="textPersonName"
+                            android:inputType="text"
+                            android:maxLines="1"
                             android:textColor="#FFFFFF"
                             android:textColorHint="#667085"/>
 
                     </com.google.android.material.textfield.TextInputLayout>
 
+                    <!-- EMAIL -->
                     <com.google.android.material.textfield.TextInputLayout
                         style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                         android:layout_width="match_parent"
@@ -136,11 +192,13 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="textEmailAddress"
+                            android:maxLines="1"
                             android:textColor="#FFFFFF"
                             android:textColorHint="#667085"/>
 
                     </com.google.android.material.textfield.TextInputLayout>
 
+                    <!-- PASSWORD -->
                     <com.google.android.material.textfield.TextInputLayout
                         style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                         android:layout_width="match_parent"
@@ -167,6 +225,7 @@
 
                     </com.google.android.material.textfield.TextInputLayout>
 
+                    <!-- CONFIRM PASSWORD -->
                     <com.google.android.material.textfield.TextInputLayout
                         style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                         android:layout_width="match_parent"

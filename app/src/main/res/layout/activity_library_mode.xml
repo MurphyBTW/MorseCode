@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <androidx.constraintlayout.widget.ConstraintLayout
+    android:fitsSystemWindows="true"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -19,6 +20,21 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="22dp">
+
+            <TextView
+                android:id="@+id/btnBack"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:layout_marginBottom="12dp"
+                android:background="@drawable/back_button_bg"
+                android:gravity="center"
+                android:text="‹"
+                android:textColor="#FFFFFF"
+                android:textSize="36sp"
+                android:clickable="true"
+                android:focusable="true"
+                android:contentDescription="Back"/>
+
 
             <TextView
                 android:layout_width="wrap_content"
@@ -46,102 +62,6 @@
                 android:text="Learn the signal. Then transmit it."
                 android:textColor="#77849A"
                 android:textSize="14sp"/>
-
-            <!-- FUTURE PLAYER STATS -->
-
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="18dp"
-                app:cardBackgroundColor="#E610141D"
-                app:cardCornerRadius="20dp"
-                app:strokeColor="#293140"
-                app:strokeWidth="1dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:padding="17dp">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:text="LEVEL"
-                            android:textColor="#69758A"
-                            android:textSize="10sp"
-                            android:letterSpacing="0.12"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"/>
-
-                        <TextView
-                            android:text="ROOKIE"
-                            android:textColor="#FFB84D"
-                            android:textSize="15sp"
-                            android:textStyle="bold"
-                            android:layout_marginTop="4dp"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"/>
-
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:text="STREAK"
-                            android:textColor="#69758A"
-                            android:textSize="10sp"
-                            android:letterSpacing="0.12"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"/>
-
-                        <TextView
-                            android:text="0 DAYS"
-                            android:textColor="#A987E8"
-                            android:textSize="15sp"
-                            android:textStyle="bold"
-                            android:layout_marginTop="4dp"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"/>
-
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:text="XP"
-                            android:textColor="#69758A"
-                            android:textSize="10sp"
-                            android:letterSpacing="0.12"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"/>
-
-                        <TextView
-                            android:text="0000"
-                            android:textColor="#4BA6B3"
-                            android:textSize="15sp"
-                            android:textStyle="bold"
-                            android:layout_marginTop="4dp"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"/>
-
-                    </LinearLayout>
-
-                </LinearLayout>
-
-            </com.google.android.material.card.MaterialCardView>
 
             <!-- LEARN -->
 

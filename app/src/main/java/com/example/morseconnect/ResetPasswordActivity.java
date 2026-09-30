@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -22,6 +23,7 @@ public class ResetPasswordActivity extends AppCompatActivity {
     EditText edtPassword;
     EditText edtConfirmPassword;
     Button btnResetPassword;
+    TextView btnBackToLogin;
 
     String email;
     String resetToken;
@@ -34,11 +36,23 @@ public class ResetPasswordActivity extends AppCompatActivity {
         edtPassword = findViewById(R.id.edtPassword);
         edtConfirmPassword = findViewById(R.id.edtConfirmPassword);
         btnResetPassword = findViewById(R.id.btnResetPassword);
+        btnBackToLogin = findViewById(R.id.btnBackToLogin);
 
         email = getIntent().getStringExtra("email");
         resetToken = getIntent().getStringExtra("reset_token");
 
         btnResetPassword.setOnClickListener(v -> resetPassword());
+
+        btnBackToLogin.setOnClickListener(v -> {
+            Intent intent = new Intent(ResetPasswordActivity.this, LoginActivity.class);
+            intent.addFlags(
+                    Intent.FLAG_ACTIVITY_CLEAR_TOP |
+                            Intent.FLAG_ACTIVITY_NEW_TASK |
+                            Intent.FLAG_ACTIVITY_CLEAR_TASK
+            );
+            startActivity(intent);
+            finish();
+        });
     }
 
     private void resetPassword() {

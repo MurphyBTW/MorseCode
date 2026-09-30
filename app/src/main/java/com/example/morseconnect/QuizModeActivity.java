@@ -3,6 +3,7 @@ package com.example.morseconnect;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
+import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class QuizModeActivity extends AppCompatActivity {
@@ -14,11 +15,13 @@ public class QuizModeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_quiz_mode);
 
-        // 🔙 BACK BUTTON
+        // Custom back button
         if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setDisplayShowHomeEnabled(true);
+            getSupportActionBar().hide();
         }
+
+        TextView btnBack = findViewById(R.id.btnBack);
+        btnBack.setOnClickListener(v -> finish());
 
         btnEasy = findViewById(R.id.btnEasy);
         btnMedium = findViewById(R.id.btnMedium);

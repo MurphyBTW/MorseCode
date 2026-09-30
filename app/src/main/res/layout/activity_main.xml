@@ -10,6 +10,7 @@
     android:fitsSystemWindows="true"
     tools:context=".MainActivity">
 
+    <!-- Main content -->
     <ScrollView
         android:id="@+id/mainScroll"
         android:layout_width="0dp"
@@ -17,7 +18,7 @@
         android:fillViewport="true"
         android:overScrollMode="never"
         android:scrollbars="none"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/bottomNavigation"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -29,7 +30,7 @@
             android:paddingStart="22dp"
             android:paddingTop="22dp"
             android:paddingEnd="22dp"
-            android:paddingBottom="28dp">
+            android:paddingBottom="20dp">
 
             <!-- Header -->
             <LinearLayout
@@ -212,14 +213,14 @@
                 android:paddingEnd="18dp"
                 android:text="Daily Challenge"
                 android:textAllCaps="false"
-                android:textColor="#FFF4DF"
+                android:textColor="#241507"
                 android:textSize="18sp"
                 android:textStyle="bold"
                 app:cornerRadius="22dp"
                 app:icon="@android:drawable/ic_menu_today"
                 app:iconGravity="textStart"
                 app:iconPadding="14dp"
-                app:iconTint="#FFF4DF" />
+                app:iconTint="#241507" />
 
             <TextView
                 android:layout_width="match_parent"
@@ -264,28 +265,6 @@
                 android:text="ranked matches  •  rating  •  leaderboard"
                 android:textColor="#6D4C29"
                 android:textSize="10sp" />
-
-            <!-- Settings -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnSettings"
-                android:layout_width="match_parent"
-                android:layout_height="68dp"
-                android:layout_marginTop="22dp"
-                android:background="@drawable/btn_settings_bg"
-                android:elevation="4dp"
-                android:gravity="center_vertical"
-                android:paddingStart="20dp"
-                android:paddingEnd="18dp"
-                android:text="Settings"
-                android:textAllCaps="false"
-                android:textColor="#241507"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                app:cornerRadius="22dp"
-                app:icon="@android:drawable/ic_menu_preferences"
-                app:iconGravity="textStart"
-                app:iconPadding="14dp"
-                app:iconTint="#241507" />
 
             <!-- Morse signal legend -->
             <LinearLayout
@@ -337,4 +316,80 @@
         </LinearLayout>
     </ScrollView>
 
+    <!-- Fixed bottom navigation -->
+    <LinearLayout
+        android:id="@+id/bottomNavigation"
+        android:layout_width="0dp"
+        android:layout_height="68dp"
+        android:background="#10111D"
+        android:elevation="12dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <!-- Home -->
+        <TextView
+            android:id="@+id/btnHome"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:lineSpacingExtra="3dp"
+            android:text="⌂\nHome"
+            android:textColor="#FFC45C"
+            android:textSize="12sp" />
+
+        <!-- Profile -->
+        <TextView
+            android:id="@+id/btnProfile"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:lineSpacingExtra="3dp"
+            android:text="♙\nProfile"
+            android:textColor="#B7B7C8"
+            android:textSize="12sp" />
+
+        <!-- Leaderboards -->
+        <TextView
+            android:id="@+id/btnLeaderboard"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:lineSpacingExtra="3dp"
+            android:text="🏆\nLeaderboards"
+            android:textColor="#B7B7C8"
+            android:textSize="12sp" />
+
+        <!-- Settings -->
+        <TextView
+            android:id="@+id/btnSettingsTab"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:lineSpacingExtra="3dp"
+            android:text="⚙\nSettings"
+            android:textColor="#B7B7C8"
+            android:textSize="12sp" />
+
+    </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

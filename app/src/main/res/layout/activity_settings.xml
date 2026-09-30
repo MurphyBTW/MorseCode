@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -7,46 +6,78 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/main_background"
+    android:fitsSystemWindows="true"
     tools:context=".SettingsActivity">
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fillViewport="true">
+        android:fillViewport="true"
+        android:clipToPadding="false">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="22dp">
+            android:padding="16dp">
 
-            <TextView
-                android:layout_width="wrap_content"
+            <!-- HEADER -->
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="SIGNAL CONTROL"
-                android:textColor="#4BA6B3"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:letterSpacing="0.18"/>
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:layout_marginBottom="20dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="Tune your station"
-                android:textColor="#FFFFFF"
-                android:textSize="29sp"
-                android:textStyle="bold"/>
+                <TextView
+                    android:id="@+id/btnBack"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:background="@drawable/back_button_bg"
+                    android:gravity="center"
+                    android:text="‹"
+                    android:textColor="#FFFFFF"
+                    android:textSize="36sp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:contentDescription="Back"/>
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
-                android:layout_marginBottom="20dp"
-                android:text="Adjust how MorseConnect speaks to you."
-                android:textColor="#77849A"
-                android:textSize="14sp"/>
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="12dp">
 
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="SIGNAL CONTROL"
+                        android:textColor="#4BA6B3"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.18"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:text="Tune your station"
+                        android:textColor="#FFFFFF"
+                        android:textSize="25sp"
+                        android:textStyle="bold"/>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:text="Adjust how MorseConnect speaks to you."
+                        android:textColor="#77849A"
+                        android:textSize="13sp"/>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- TRANSMISSION SETTINGS -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -63,29 +94,29 @@
                     android:padding="20dp">
 
                     <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
                         android:text="TRANSMISSION"
                         android:textColor="#FFFFFF"
                         android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"/>
+                        android:textStyle="bold"/>
 
                     <TextView
-                        android:text="Control frequency, volume and Morse speed."
-                        android:textColor="#77849A"
-                        android:textSize="13sp"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:layout_marginBottom="18dp"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"/>
+                        android:text="Control frequency, volume and Morse speed."
+                        android:textColor="#77849A"
+                        android:textSize="13sp"/>
 
                     <TextView
                         android:id="@+id/lblFrequency"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
                         android:text="@string/label_frequency_default"
                         android:textColor="#FFB84D"
-                        android:textStyle="bold"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"/>
+                        android:textStyle="bold"/>
 
                     <SeekBar
                         android:id="@+id/seekFrequency"
@@ -97,11 +128,11 @@
 
                     <TextView
                         android:id="@+id/lblVolume"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
                         android:text="@string/label_volume_default"
                         android:textColor="#A987E8"
-                        android:textStyle="bold"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"/>
+                        android:textStyle="bold"/>
 
                     <SeekBar
                         android:id="@+id/seekVolume"
@@ -113,11 +144,11 @@
 
                     <TextView
                         android:id="@+id/lblSpeed"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
                         android:text="@string/label_speed_default"
                         android:textColor="#4BA6B3"
-                        android:textStyle="bold"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"/>
+                        android:textStyle="bold"/>
 
                     <SeekBar
                         android:id="@+id/seekSpeed"
@@ -125,13 +156,10 @@
                         android:layout_height="wrap_content"
                         android:max="50"
                         android:progress="20"/>
-
                 </LinearLayout>
-
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- FUTURE GAME STATS -->
-
+            <!-- HELP AND INFORMATION -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -148,49 +176,133 @@
                     android:padding="20dp">
 
                     <TextView
-                        android:text="PROGRESS"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="HELP &amp; INFORMATION"
                         android:textColor="#FFFFFF"
                         android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"/>
+                        android:textStyle="bold"/>
 
                     <TextView
-                        android:text="Your future operator profile"
-                        android:textColor="#77849A"
-                        android:textSize="13sp"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:layout_marginBottom="15dp"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"/>
+                        android:layout_marginBottom="12dp"
+                        android:text="Learn about MorseConnect and how to use it."
+                        android:textColor="#77849A"
+                        android:textSize="13sp"/>
 
-                    <TextView
-                        android:text="XP             0000"
-                        android:textColor="#4BA6B3"
-                        android:textStyle="bold"
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/cardFaq"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"/>
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="10dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        app:cardBackgroundColor="#25213F"
+                        app:cardCornerRadius="14dp"
+                        app:strokeColor="#393451"
+                        app:strokeWidth="1dp">
 
-                    <TextView
-                        android:text="BEST STREAK     00"
-                        android:textColor="#A987E8"
-                        android:textStyle="bold"
-                        android:layout_marginTop="10dp"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"/>
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="16dp">
 
-                    <TextView
-                        android:text="SIGNALS MASTERED     00"
-                        android:textColor="#FFB84D"
-                        android:textStyle="bold"
-                        android:layout_marginTop="10dp"
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Frequently Asked Questions"
+                                android:textColor="#FFFFFF"
+                                android:textSize="15sp"
+                                android:textStyle="bold"/>
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="Answers to common questions"
+                                android:textColor="#A6A1B8"
+                                android:textSize="12sp"/>
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/cardAbout"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"/>
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="10dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        app:cardBackgroundColor="#25213F"
+                        app:cardCornerRadius="14dp"
+                        app:strokeColor="#393451"
+                        app:strokeWidth="1dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="About MorseConnect"
+                                android:textColor="#FFFFFF"
+                                android:textSize="15sp"
+                                android:textStyle="bold"/>
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="The purpose of the app"
+                                android:textColor="#A6A1B8"
+                                android:textSize="12sp"/>
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/cardHowItWorks"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:clickable="true"
+                        android:focusable="true"
+                        app:cardBackgroundColor="#25213F"
+                        app:cardCornerRadius="14dp"
+                        app:strokeColor="#393451"
+                        app:strokeWidth="1dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="How the App Works"
+                                android:textColor="#FFFFFF"
+                                android:textSize="15sp"
+                                android:textStyle="bold"/>
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="A quick guide to the learning modes"
+                                android:textColor="#A6A1B8"
+                                android:textSize="12sp"/>
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
 
                 </LinearLayout>
-
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- LOGOUT -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnLogout"
                 android:layout_width="match_parent"
@@ -202,7 +314,6 @@
                 app:strokeWidth="1dp"/>
 
         </LinearLayout>
-
     </ScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

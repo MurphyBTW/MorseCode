@@ -3,7 +3,9 @@ package com.example.morseconnect;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Patterns;
-import android.widget.*;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -21,7 +23,13 @@ import java.util.Map;
 
 public class SignupActivity extends AppCompatActivity {
 
-    EditText edtUser, edtEmail, edtPass, edtConfirmPass;
+    EditText edtFirstName;
+    EditText edtLastName;
+    EditText edtUser;
+    EditText edtEmail;
+    EditText edtPass;
+    EditText edtConfirmPass;
+
     Button btnCreate;
 
     // Prevents multiple signup requests from being started
@@ -40,10 +48,14 @@ public class SignupActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayShowHomeEnabled(true);
         }
 
+        // Connect XML fields
+        edtFirstName = findViewById(R.id.edtFirstName);
+        edtLastName = findViewById(R.id.edtLastName);
         edtUser = findViewById(R.id.edtUser);
         edtEmail = findViewById(R.id.edtEmail);
         edtPass = findViewById(R.id.edtPass);
         edtConfirmPass = findViewById(R.id.edtConfirmPass);
+
         btnCreate = findViewById(R.id.btnCreate);
 
         btnCreate.setOnClickListener(v -> attemptSignup());
@@ -56,10 +68,27 @@ public class SignupActivity extends AppCompatActivity {
             return;
         }
 
+        // Get registration information
+        String firstName = edtFirstName.getText().toString().trim();
+        String lastName = edtLastName.getText().toString().trim();
         String user = edtUser.getText().toString().trim();
         String email = edtEmail.getText().toString().trim();
         String pass = edtPass.getText().toString();
         String confirmPass = edtConfirmPass.getText().toString();
+
+        // Validate first name
+        if (firstName.isEmpty()) {
+            edtFirstName.setError("Enter your first name");
+            edtFirstName.requestFocus();
+            return;
+        }
+
+        // Validate last name
+        if (lastName.isEmpty()) {
+            edtLastName.setError("Enter your last name");
+            edtLastName.requestFocus();
+            return;
+        }
 
         // Validate username
         if (user.isEmpty()) {
@@ -94,7 +123,13 @@ public class SignupActivity extends AppCompatActivity {
             return;
         }
 
-        // Confirm password
+        // Validate confirm password
+        if (confirmPass.isEmpty()) {
+            edtConfirmPass.setError("Confirm your password");
+            edtConfirmPass.requestFocus();
+            return;
+        }
+
         if (!pass.equals(confirmPass)) {
             edtConfirmPass.setError("Passwords do not match");
             edtConfirmPass.requestFocus();
@@ -108,6 +143,10 @@ public class SignupActivity extends AppCompatActivity {
         JSONObject body = new JSONObject();
 
         try {
+
+            // Registration data sent to signup Edge Function
+            body.put("first_name", firstName);
+            body.put("last_name", lastName);
             body.put("username", user);
             body.put("email", email);
             body.put("password", pass);
@@ -206,13 +245,24 @@ public class SignupActivity extends AppCompatActivity {
                         String message;
 
                         if (statusCode == 409) {
-                            message = "Username or email already exists";
+
+                            message =
+                                    "Username or email already exists";
+
                         } else if (statusCode == 400) {
-                            message = "Invalid signup information";
+
+                            message =
+                                    "Invalid signup information";
+
                         } else if (statusCode == 500) {
-                            message = "Server error";
+
+                            message =
+                                    "Server error";
+
                         } else {
-                            message = "Signup failed";
+
+                            message =
+                                    "Signup failed";
                         }
 
                         Toast.makeText(
@@ -252,7 +302,6 @@ public class SignupActivity extends AppCompatActivity {
             }
         };
 
-        // IMPORTANT:
         // Prevent Volley from automatically retrying the signup POST.
         // This prevents duplicate OTP emails.
         request.setRetryPolicy(

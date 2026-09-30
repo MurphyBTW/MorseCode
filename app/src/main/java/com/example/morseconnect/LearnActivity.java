@@ -1,187 +1,334 @@
 package com.example.morseconnect;
 
+import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.hardware.camera2.CameraManager;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
-import android.widget.*;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.Spinner;
+import android.widget.TextView;
+
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Map;
 
 public class LearnActivity extends AppCompatActivity {
 
-    Spinner spinnerCategory, spinnerItem;
-    TextView txtLetter, txtMorse;
-    Button btnPlay;
-    View flashIndicator;
+    private Spinner spinnerCategory;
+    private Spinner spinnerLetters;
 
-    Map<String, Map<String, String>> morseData;
-    Map<String, String> currentMap;
+    private TextView txtLetter;
+    private TextView txtMorse;
+    private View flashIndicator;
+    private Button btnPlay;
 
-    AudioTrack audioTrack;
-    CameraManager cameraManager;
-    String cameraId;
+    private CameraManager cameraManager;
+    private String cameraId;
+    private AudioTrack audioTrack;
 
-    Handler handler = new Handler();
+    private final Handler handler = new Handler(Looper.getMainLooper());
+    private final ArrayList<Runnable> playbackTasks = new ArrayList<>();
 
-    int wpm = 20;
-    int frequency = 600;
-    float volume = 0.8f;
-    int unitMs = 60;
+    private Map<String, Map<String, String>> categorizedMorse;
+    private Map<String, String> selectedCategory;
+
+    private int wpm = 20;
+    private int frequency = 600;
+    private float volume = 0.8f;
+    private int unitMs = 60;
+
+    private boolean isPlaying = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_learn);
 
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        }
+        TextView btnBack = findViewById(R.id.btnBack);
+        btnBack.setOnClickListener(v -> finish());
 
         spinnerCategory = findViewById(R.id.spinnerCategory);
-        spinnerItem = findViewById(R.id.spinnerLetters);
+        spinnerLetters = findViewById(R.id.spinnerLetters);
 
         txtLetter = findViewById(R.id.txtLetter);
         txtMorse = findViewById(R.id.txtMorse);
-        btnPlay = findViewById(R.id.btnPlay);
         flashIndicator = findViewById(R.id.flashIndicator);
+        btnPlay = findViewById(R.id.btnPlay);
 
-        morseData = MorseDatabase.getCategorizedMorse();
-        loadSettings();
+        cameraManager = (CameraManager)
+                getSystemService(Context.CAMERA_SERVICE);
 
-        cameraManager = (CameraManager) getSystemService(CAMERA_SERVICE);
         try {
-            cameraId = cameraManager.getCameraIdList()[0];
-        } catch (Exception ignored) {}
+            String[] cameraIds = cameraManager.getCameraIdList();
 
-        // CATEGORY SPINNER
-        ArrayAdapter<String> catAdapter = createSpinnerAdapter(
-                new ArrayList<>(morseData.keySet())
-        );
-
-        spinnerCategory.setAdapter(catAdapter);
-
-        spinnerCategory.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
-                String category = spinnerCategory.getSelectedItem().toString();
-                currentMap = morseData.get(category);
-
-                ArrayAdapter<String> itemAdapter = createSpinnerAdapter(
-                        new ArrayList<>(currentMap.keySet())
-                );
-
-                spinnerItem.setAdapter(itemAdapter);
+            if (cameraIds.length > 0) {
+                cameraId = cameraIds[0];
             }
+        } catch (Exception ignored) {
+            cameraId = null;
+        }
 
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {}
-        });
+        categorizedMorse = MorseDatabase.getCategorizedMorse();
 
-        // ITEM SPINNER
-        spinnerItem.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
-                String key = spinnerItem.getSelectedItem().toString();
-                txtLetter.setText(key);
-                txtMorse.setText(currentMap.get(key));
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {}
-        });
+        loadSettings();
+        setupCategorySpinner();
 
         btnPlay.setOnClickListener(v -> {
-            String code = currentMap.get(txtLetter.getText().toString());
-            playMorse(code);
+            if (isPlaying) {
+                cancelPlayback();
+            } else {
+                playSelectedMorse();
+            }
         });
     }
 
-    // SPINNER ADAPTER
-    // Makes both the selected text and dropdown options white.
-    private ArrayAdapter<String> createSpinnerAdapter(ArrayList<String> items) {
-
+    // Creates a Spinner adapter with white text for both
+    // the selected item and the dropdown list.
+    private ArrayAdapter<String> createWhiteSpinnerAdapter(
+            ArrayList<String> items
+    ) {
         return new ArrayAdapter<String>(
                 this,
                 android.R.layout.simple_spinner_item,
                 items
         ) {
+            private View styleSpinnerText(View view) {
+                if (view instanceof TextView) {
+                    TextView textView = (TextView) view;
+                    textView.setTextColor(Color.WHITE);
+                    textView.setTextSize(14);
+                }
+                return view;
+            }
+
             @Override
-            public View getView(int position, View convertView, android.view.ViewGroup parent) {
-
-                TextView textView = (TextView) super.getView(position, convertView, parent);
-
-                // Selected Spinner text
-                textView.setTextColor(0xFFFFFFFF);
-                textView.setTextSize(15);
-
-                return textView;
+            public View getView(
+                    int position,
+                    View convertView,
+                    ViewGroup parent
+            ) {
+                View view = super.getView(
+                        position,
+                        convertView,
+                        parent
+                );
+                return styleSpinnerText(view);
             }
 
             @Override
             public View getDropDownView(
                     int position,
                     View convertView,
-                    android.view.ViewGroup parent
+                    ViewGroup parent
             ) {
-
-                TextView textView = (TextView) super.getDropDownView(
+                View view = super.getDropDownView(
                         position,
                         convertView,
                         parent
                 );
 
-                // Dropdown option text
-                textView.setTextColor(0xFFFFFFFF);
-                textView.setTextSize(15);
+                if (view instanceof TextView) {
+                    TextView textView = (TextView) view;
+                    textView.setTextColor(Color.WHITE);
+                    textView.setTextSize(14);
+                    textView.setBackgroundColor(Color.rgb(23, 28, 39));
+                    textView.setPadding(24, 18, 24, 18);
+                }
 
-                return textView;
+                return view;
             }
         };
     }
 
-    private void loadSettings() {
-        SharedPreferences prefs = getSharedPreferences("MorseSettings", MODE_PRIVATE);
-        frequency = prefs.getInt("frequency", 600);
-        int volInt = prefs.getInt("volume", 80);
-        volume = volInt / 100f;
-        wpm = prefs.getInt("speed", 20);
-        unitMs = 1200 / wpm;
+    private void setupCategorySpinner() {
+        if (categorizedMorse == null || categorizedMorse.isEmpty()) {
+            txtLetter.setText("No Morse data found");
+            txtMorse.setText("");
+            btnPlay.setEnabled(false);
+            return;
+        }
+
+        ArrayList<String> categories =
+                new ArrayList<>(categorizedMorse.keySet());
+
+        ArrayAdapter<String> adapter =
+                createWhiteSpinnerAdapter(categories);
+
+        adapter.setDropDownViewResource(
+                android.R.layout.simple_spinner_dropdown_item
+        );
+
+        spinnerCategory.setAdapter(adapter);
+
+        spinnerCategory.setOnItemSelectedListener(
+                new AdapterView.OnItemSelectedListener() {
+                    @Override
+                    public void onItemSelected(
+                            AdapterView<?> parent,
+                            View view,
+                            int position,
+                            long id
+                    ) {
+                        String category = categories.get(position);
+                        selectedCategory = categorizedMorse.get(category);
+                        setupLetterSpinner();
+                    }
+
+                    @Override
+                    public void onNothingSelected(AdapterView<?> parent) {
+                    }
+                }
+        );
+    }
+
+    private void setupLetterSpinner() {
+        cancelPlayback();
+
+        if (selectedCategory == null || selectedCategory.isEmpty()) {
+            txtLetter.setText("No entries found");
+            txtMorse.setText("");
+            btnPlay.setEnabled(false);
+            return;
+        }
+
+        btnPlay.setEnabled(true);
+
+        ArrayList<String> entries =
+                new ArrayList<>(selectedCategory.keySet());
+
+        ArrayAdapter<String> adapter =
+                createWhiteSpinnerAdapter(entries);
+
+        adapter.setDropDownViewResource(
+                android.R.layout.simple_spinner_dropdown_item
+        );
+
+        spinnerLetters.setAdapter(adapter);
+
+        spinnerLetters.setOnItemSelectedListener(
+                new AdapterView.OnItemSelectedListener() {
+                    @Override
+                    public void onItemSelected(
+                            AdapterView<?> parent,
+                            View view,
+                            int position,
+                            long id
+                    ) {
+                        cancelPlayback();
+
+                        String entry = entries.get(position);
+                        txtLetter.setText(entry);
+
+                        String code = selectedCategory.get(entry);
+                        txtMorse.setText(code == null ? "" : code);
+                    }
+
+                    @Override
+                    public void onNothingSelected(AdapterView<?> parent) {
+                    }
+                }
+        );
+    }
+
+    private void playSelectedMorse() {
+        if (selectedCategory == null
+                || spinnerLetters.getSelectedItem() == null) {
+            return;
+        }
+
+        String entry = spinnerLetters.getSelectedItem().toString();
+        String code = selectedCategory.get(entry);
+
+        if (code != null && !code.trim().isEmpty()) {
+            playMorse(code);
+        }
     }
 
     private void playMorse(String code) {
+        cancelPlayback();
+
+        if (code == null || code.trim().isEmpty()) {
+            return;
+        }
+
+        isPlaying = true;
+        btnPlay.setText("Stop");
+
         long delay = 0;
 
         for (char c : code.toCharArray()) {
             if (c == '.') {
                 scheduleSignal(delay, unitMs);
-                delay += unitMs * 2;
+                delay += unitMs * 2L;
+
             } else if (c == '-') {
                 scheduleSignal(delay, unitMs * 3);
-                delay += unitMs * 4;
+                delay += unitMs * 4L;
+
             } else if (c == ' ') {
-                delay += unitMs * 2;
+                delay += unitMs * 2L;
             }
+        }
+
+        Runnable finishTask = () -> {
+            stopSignal();
+            isPlaying = false;
+            btnPlay.setText("Play");
+            playbackTasks.clear();
+        };
+
+        postPlayback(finishTask, delay);
+    }
+
+    private void scheduleSignal(long startDelay, int duration) {
+        Runnable startTask = this::startSignal;
+        Runnable stopTask = this::stopSignal;
+
+        postPlayback(startTask, startDelay);
+        postPlayback(stopTask, startDelay + duration);
+    }
+
+    private void postPlayback(Runnable task, long delay) {
+        playbackTasks.add(task);
+        handler.postDelayed(task, Math.max(0, delay));
+    }
+
+    private void cancelPlayback() {
+        for (Runnable task : playbackTasks) {
+            handler.removeCallbacks(task);
+        }
+
+        playbackTasks.clear();
+
+        stopSignal();
+        isPlaying = false;
+
+        if (btnPlay != null) {
+            btnPlay.setText("Play");
         }
     }
 
-    private void scheduleSignal(long start, int duration) {
-        handler.postDelayed(this::startSignal, start);
-        handler.postDelayed(this::stopSignal, start + duration);
-    }
-
+    // This uses the same tone generation as PracticeActivity.
     private void startSignal() {
         stopSignal();
 
         int sampleRate = 44100;
-        double period = (double) sampleRate / frequency;
-        int numSamples = (int) (Math.round(period) * 50);
-        if (numSamples == 0) numSamples = 441;
+        double period = (double) sampleRate / Math.max(100, frequency);
+        int numSamples = Math.max(
+                441,
+                (int) (Math.round(period) * 50)
+        );
 
         double[] sample = new double[numSamples];
         byte[] generatedSnd = new byte[2 * numSamples];
@@ -198,38 +345,85 @@ public class LearnActivity extends AppCompatActivity {
             generatedSnd[idx++] = (byte) ((val & 0xff00) >>> 8);
         }
 
-        audioTrack = new AudioTrack(
-                AudioManager.STREAM_MUSIC,
-                sampleRate,
-                AudioFormat.CHANNEL_OUT_MONO,
-                AudioFormat.ENCODING_PCM_16BIT,
-                generatedSnd.length,
-                AudioTrack.MODE_STATIC
-        );
-
-        audioTrack.write(generatedSnd, 0, generatedSnd.length);
-        audioTrack.setLoopPoints(0, numSamples, -1);
-        audioTrack.play();
-
         try {
-            cameraManager.setTorchMode(cameraId, true);
-        } catch (Exception ignored) {}
+            audioTrack = new AudioTrack(
+                    AudioManager.STREAM_MUSIC,
+                    sampleRate,
+                    AudioFormat.CHANNEL_OUT_MONO,
+                    AudioFormat.ENCODING_PCM_16BIT,
+                    generatedSnd.length,
+                    AudioTrack.MODE_STATIC
+            );
 
-        flashIndicator.setBackgroundResource(R.drawable.indicator_on);
+            audioTrack.write(
+                    generatedSnd,
+                    0,
+                    generatedSnd.length
+            );
+
+            audioTrack.setLoopPoints(0, numSamples, -1);
+            audioTrack.play();
+
+        } catch (Exception ignored) {
+            if (audioTrack != null) {
+                try {
+                    audioTrack.release();
+                } catch (Exception ignoredAgain) {
+                }
+                audioTrack = null;
+            }
+        }
+
+        setFlashlight(true);
+
+        if (flashIndicator != null) {
+            flashIndicator.setBackgroundResource(R.drawable.indicator_on);
+        }
     }
 
     private void stopSignal() {
         if (audioTrack != null) {
-            audioTrack.stop();
-            audioTrack.release();
+            try {
+                audioTrack.stop();
+            } catch (Exception ignored) {
+            }
+
+            try {
+                audioTrack.release();
+            } catch (Exception ignored) {
+            }
+
             audioTrack = null;
         }
 
-        try {
-            cameraManager.setTorchMode(cameraId, false);
-        } catch (Exception ignored) {}
+        setFlashlight(false);
 
-        flashIndicator.setBackgroundResource(R.drawable.indicator_off);
+        if (flashIndicator != null) {
+            flashIndicator.setBackgroundResource(R.drawable.indicator_off);
+        }
+    }
+
+    private void setFlashlight(boolean enabled) {
+        if (cameraManager == null || cameraId == null) {
+            return;
+        }
+
+        try {
+            cameraManager.setTorchMode(cameraId, enabled);
+        } catch (Exception ignored) {
+        }
+    }
+
+    private void loadSettings() {
+        SharedPreferences prefs =
+                getSharedPreferences("MorseSettings", MODE_PRIVATE);
+
+        frequency = prefs.getInt("frequency", 600);
+        int volInt = prefs.getInt("volume", 80);
+        volume = volInt / 100f;
+        wpm = prefs.getInt("speed", 20);
+
+        unitMs = Math.max(20, 1200 / Math.max(5, wpm));
     }
 
     @Override
@@ -239,17 +433,15 @@ public class LearnActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
-
-        if (audioTrack != null) {
-            audioTrack.release();
-        }
+    protected void onPause() {
+        cancelPlayback();
+        super.onPause();
     }
 
     @Override
-    public boolean onSupportNavigateUp() {
-        finish();
-        return true;
+    protected void onDestroy() {
+        handler.removeCallbacksAndMessages(null);
+        stopSignal();
+        super.onDestroy();
     }
 }

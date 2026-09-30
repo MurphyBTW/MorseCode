@@ -16,9 +16,10 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity {
 
-    Button btnLibrary, btnQuiz, btnSettings;
+    Button btnLibrary, btnQuiz;
     Button btnDailyChallenge, btnChallenge;
 
+    View btnProfile, btnLeaderboard, btnSettingsTab;
     View signalLamp;
     TextView txtSignalCode;
 
@@ -56,7 +57,10 @@ public class MainActivity extends AppCompatActivity {
         btnQuiz = findViewById(R.id.btnQuiz);
         btnDailyChallenge = findViewById(R.id.btnDailyChallenge);
         btnChallenge = findViewById(R.id.btnChallenge);
-        btnSettings = findViewById(R.id.btnSettings);
+
+        btnProfile = findViewById(R.id.btnProfile);
+        btnLeaderboard = findViewById(R.id.btnLeaderboard);
+        btnSettingsTab = findViewById(R.id.btnSettingsTab);
 
         signalLamp = findViewById(R.id.signalLamp);
         txtSignalCode = findViewById(R.id.txtSignalCode);
@@ -93,8 +97,20 @@ public class MainActivity extends AppCompatActivity {
                             ChallengeModeActivity.class)), 90);
         });
 
-        // Settings
-        btnSettings.setOnClickListener(v -> {
+        // Bottom navigation: Profile
+        btnProfile.setOnClickListener(v -> {
+            pressAnimation(v);
+            v.postDelayed(() -> openPage("ProfileActivity"), 90);
+        });
+
+        // Bottom navigation: Leaderboards / Trophy Hub
+        btnLeaderboard.setOnClickListener(v -> {
+            pressAnimation(v);
+            v.postDelayed(() -> openPage("LeaderboardActivity"), 90);
+        });
+
+        // Bottom navigation: Settings
+        btnSettingsTab.setOnClickListener(v -> {
             pressAnimation(v);
             v.postDelayed(() -> startActivity(
                     new Intent(MainActivity.this,
@@ -102,6 +118,19 @@ public class MainActivity extends AppCompatActivity {
         });
 
         startSignalAnimation();
+    }
+
+    private void openPage(String activityName) {
+        try {
+            Class<?> page = Class.forName(
+                    getPackageName() + "." + activityName);
+            startActivity(new Intent(this, page));
+        } catch (ClassNotFoundException e) {
+            Toast.makeText(this,
+                    activityName.replace("Activity", "")
+                            + " screen is next to be created",
+                    Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void pressAnimation(View view) {

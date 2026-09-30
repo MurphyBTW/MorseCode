@@ -23,6 +23,7 @@ public class ForgotPasswordActivity extends AppCompatActivity {
 
     EditText edtEmail;
     Button btnReset;
+    TextView tvBackToLogin;
 
     private boolean resetInProgress = false;
 
@@ -41,8 +42,11 @@ public class ForgotPasswordActivity extends AppCompatActivity {
 
         edtEmail = findViewById(R.id.edtEmail);
         btnReset = findViewById(R.id.btnReset);
+        tvBackToLogin = findViewById(R.id.tvBackToLogin);
 
         btnReset.setOnClickListener(v -> sendResetCode());
+
+        tvBackToLogin.setOnClickListener(v -> finish());
     }
 
     private void sendResetCode() {

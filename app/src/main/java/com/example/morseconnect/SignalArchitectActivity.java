@@ -1,12 +1,9 @@
-
 package com.example.morseconnect;
 
-import android.content.res.ColorStateList;
-import android.graphics.Color;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.SystemClock;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -14,452 +11,1558 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 public class SignalArchitectActivity extends AppCompatActivity {
 
     private static final int TARGET = 20;
-    private static final String PREFS = "signal_architect_stats";
 
-    private TextView txtRound, txtTime, txtCorrect, txtSignal;
-    private TextView txtFeedback, txtCombo, txtProfileStats;
+    private static final String SESSION_PREFS =
+            "morseconnect_session";
+
+    private TextView txtRound;
+    private TextView txtTime;
+    private TextView txtCorrect;
+    private TextView txtSignal;
+    private TextView txtMmr;
+    private TextView txtFeedback;
+    private TextView txtCombo;
+    private TextView txtProfileStats;
+
     private Button[] answerButtons;
+
     private NetworkMapView networkMap;
 
-    private final HashMap<String, String> morse = new HashMap<>();
-    private final Random random = new Random();
-    private final Handler handler = new Handler(Looper.getMainLooper());
+    private AlertDialog countdownDialog;
+    private Runnable countdownRunnable;
+
+    private SharedPreferences sessionPrefs;
+
+    private RequestQueue requestQueue;
+
+    private final Handler handler =
+            new Handler(Looper.getMainLooper());
+
+    private final Random random =
+            new Random();
 
     private int correct = 0;
     private int combo = 0;
-    private int wins = 0;
-    private int losses = 0;
-
-    private long bestTime = 0;
-    private long startTime = 0;
+    private int elapsedSeconds = 0;
 
     private boolean gameOver = false;
+    private boolean statsLoaded = false;
+    private boolean submittingResult = false;
 
-    private final Runnable timerRunnable = new Runnable() {
-        @Override
-        public void run() {
-            if (!gameOver) {
-                updateTimer();
-                handler.postDelayed(this, 250);
-            }
-        }
+    private String currentAnswer = "";
+    private String previousAnswer = "";
+
+    // ------------------------------------------------
+    // SERVER STATS
+    // ------------------------------------------------
+
+    private int serverMmr = 1000;
+    private int serverWins = 0;
+    private int serverLosses = 0;
+    private int serverCurrentStreak = 0;
+    private int serverBestStreak = 0;
+
+    private final ArrayList<String> questionDeck =
+            new ArrayList<>();
+
+    private int deckPosition = 0;
+
+    private final String[] letters = {
+            "A", "B", "C", "D", "E", "F", "G",
+            "H", "I", "J", "K", "L", "M", "N",
+            "O", "P", "Q", "R", "S", "T", "U",
+            "V", "W", "X", "Y", "Z"
     };
+
+    private final String[] numbers = {
+            "0", "1", "2", "3", "4",
+            "5", "6", "7", "8", "9"
+    };
+
+    private final String[] punctuation = {
+            ".", ",", "?", "'", "!", "/",
+            "(", ")", "&", ":", ";",
+            "=", "+", "-", "_", "\"",
+            "$", "@"
+    };
+
+    private final String[] morse = {
+
+            // A-Z
+            ".-", "-...", "-.-.", "-..", ".",
+            "..-.", "--.", "....", "..", ".---",
+            "-.-", ".-..", "--", "-.", "---",
+            ".--.", "--.-", ".-.", "...", "-",
+            "..-", "...-", ".--", "-..-", "-.--",
+            "--..",
+
+            // 0-9
+            "-----", ".----", "..---", "...--", "....-",
+            ".....", "-....", "--...", "---..", "----.",
+
+            // punctuation
+            ".-.-.-", "--..--", "..--..", ".----.",
+            "-.-.--", "-..-.", "-.--.", "-.--.-",
+            ".-...", "---...", "-.-.-.", "-...-",
+            ".-.-.", "-....-", "..--.-", ".-..-.",
+            "...-..-", ".--.-."
+    };
+
+    private final ArrayList<String> allCharacters =
+            new ArrayList<>();
+
+    // ------------------------------------------------
+    // TIMER
+    // ------------------------------------------------
+
+    private final Runnable timerRunnable =
+            new Runnable() {
+
+                @Override
+                public void run() {
+
+                    if (gameOver) {
+                        return;
+                    }
+
+                    elapsedSeconds++;
+
+                    updateTimer();
+
+                    handler.postDelayed(
+                            this,
+                            1000
+                    );
+                }
+            };
+
+    // ------------------------------------------------
+    // ON CREATE
+    // ------------------------------------------------
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_signal_architect);
+
+        setContentView(
+                R.layout.activity_signal_architect
+        );
+
+        sessionPrefs =
+                getSharedPreferences(
+                        SESSION_PREFS,
+                        MODE_PRIVATE
+                );
+
+        requestQueue =
+                Volley.newRequestQueue(this);
 
         bindViews();
-        setupMorse();
-        loadStats();
-        updateProfileStats();
-        setupAnswerButtons();
 
-        startGame();
+        setupCharacters();
+
+        // Show cached server stats while refreshing.
+        loadCachedStats();
+
+        // Get authoritative stats from Supabase.
+        loadProfileStats();
     }
+
+    // ------------------------------------------------
+    // BIND VIEWS
+    // ------------------------------------------------
 
     private void bindViews() {
-        txtRound = findViewById(R.id.txtRound);
-        txtTime = findViewById(R.id.txtTime);
-        txtCorrect = findViewById(R.id.txtCorrect);
-        txtSignal = findViewById(R.id.txtSignal);
-        txtFeedback = findViewById(R.id.txtFeedback);
-        txtCombo = findViewById(R.id.txtCombo);
-        txtProfileStats = findViewById(R.id.txtProfileStats);
 
-        networkMap = findViewById(R.id.networkMap);
+        txtRound =
+                findViewById(R.id.txtRound);
 
-        answerButtons = new Button[]{
-                findViewById(R.id.btnAnswer1),
-                findViewById(R.id.btnAnswer2),
-                findViewById(R.id.btnAnswer3),
-                findViewById(R.id.btnAnswer4)
-        };
+        txtTime =
+                findViewById(R.id.txtTime);
 
-        findViewById(R.id.btnExit).setOnClickListener(v -> finish());
+        txtMmr =
+                findViewById(R.id.txtMmr);
+
+        txtCorrect =
+                findViewById(R.id.txtCorrect);
+
+        txtSignal =
+                findViewById(R.id.txtSignal);
+
+        txtFeedback =
+                findViewById(R.id.txtFeedback);
+
+        txtCombo =
+                findViewById(R.id.txtCombo);
+
+        txtProfileStats =
+                findViewById(R.id.txtProfileStats);
+
+        networkMap =
+                findViewById(R.id.networkMap);
+
+        answerButtons =
+                new Button[]{
+                        findViewById(R.id.btnAnswer1),
+                        findViewById(R.id.btnAnswer2),
+                        findViewById(R.id.btnAnswer3),
+                        findViewById(R.id.btnAnswer4)
+                };
+
+        findViewById(R.id.btnExit)
+                .setOnClickListener(
+                        v -> finish()
+                );
     }
 
-    private void setupMorse() {
-        String[] letters = {
-                "A", "B", "C", "D", "E", "F", "G",
-                "H", "I", "J", "K", "L", "M", "N",
-                "O", "P", "Q", "R", "S", "T", "U",
-                "V", "W", "X", "Y", "Z"
-        };
+    // ------------------------------------------------
+    // LOAD CACHED STATS
+    // ------------------------------------------------
 
-        String[] codes = {
-                "· —",       // A
-                "— · · ·",   // B
-                "— · — ·",   // C
-                "— · ·",     // D
-                "·",         // E
-                "· · — ·",   // F
-                "— — ·",     // G
-                "· · · ·",   // H
-                "· ·",       // I
-                "· — — —",   // J
-                "— · —",     // K
-                "· — · ·",   // L
-                "— —",       // M
-                "— ·",       // N
-                "— — —",     // O
-                "· — — ·",   // P
-                "— — · —",   // Q
-                "· — ·",     // R
-                "· · ·",     // S
-                "—",         // T
-                "· · —",     // U
-                "· · · —",   // V
-                "· — —",     // W
-                "— · · —",   // X
-                "— · — —",   // Y
-                "— — · ·"    // Z
-        };
+    private void loadCachedStats() {
 
-        for (int i = 0; i < letters.length; i++) {
-            morse.put(letters[i], codes[i]);
-        }
+        serverMmr =
+                sessionPrefs.getInt(
+                        "mmr",
+                        1000
+                );
 
-        String[] digits = {
-                "— — — — —", // 0
-                "· — — — —", // 1
-                "· · — — —", // 2
-                "· · · — —", // 3
-                "· · · · —", // 4
-                "· · · · ·", // 5
-                "— · · · ·", // 6
-                "— — · · ·", // 7
-                "— — — · ·", // 8
-                "— — — — ·"  // 9
-        };
+        serverWins =
+                sessionPrefs.getInt(
+                        "wins",
+                        0
+                );
 
-        for (int i = 0; i < digits.length; i++) {
-            morse.put(String.valueOf(i), digits[i]);
-        }
+        serverLosses =
+                sessionPrefs.getInt(
+                        "losses",
+                        0
+                );
+
+        serverCurrentStreak =
+                sessionPrefs.getInt(
+                        "current_streak",
+                        0
+                );
+
+        serverBestStreak =
+                sessionPrefs.getInt(
+                        "best_streak",
+                        0
+                );
+
+        updateStats();
     }
 
-    private void setupAnswerButtons() {
-        for (Button button : answerButtons) {
-            button.setOnClickListener(v -> {
-                if (gameOver) return;
+    // ------------------------------------------------
+    // GET CURRENT STATS FROM PROFILE ENDPOINT
+    // ------------------------------------------------
 
-                checkAnswer(button.getText().toString());
-            });
+    private void loadProfileStats() {
+
+        String token =
+                getSessionToken();
+
+        if (token.isEmpty()) {
+
+            showSessionError();
+
+            return;
         }
+
+        String url =
+                ApiConfig.BASE_URL +
+                        "profile";
+
+        JsonObjectRequest request =
+                new JsonObjectRequest(
+                        Request.Method.GET,
+                        url,
+                        null,
+
+                        response -> {
+
+                            try {
+
+                                boolean success =
+                                        response.optBoolean(
+                                                "success",
+                                                false
+                                        );
+
+                                if (!success) {
+
+                                    Toast.makeText(
+                                            this,
+                                            response.optString(
+                                                    "message",
+                                                    "Unable to load stats"
+                                            ),
+                                            Toast.LENGTH_SHORT
+                                    ).show();
+
+                                    return;
+                                }
+
+                                JSONObject stats =
+                                        response.optJSONObject(
+                                                "stats"
+                                        );
+
+                                if (stats == null) {
+
+                                    Toast.makeText(
+                                            this,
+                                            "Player stats were not returned",
+                                            Toast.LENGTH_SHORT
+                                    ).show();
+
+                                    return;
+                                }
+
+                                updateServerStats(
+                                        stats
+                                );
+
+                                statsLoaded = true;
+
+                                showReadyDialog();
+
+                            } catch (Exception e) {
+
+                                Toast.makeText(
+                                        this,
+                                        "Unable to read player stats",
+                                        Toast.LENGTH_SHORT
+                                ).show();
+                            }
+                        },
+
+                        error -> {
+
+                            if (
+                                    error.networkResponse != null &&
+                                            error.networkResponse.statusCode == 401
+                            ) {
+
+                                showSessionError();
+
+                                return;
+                            }
+
+                            Toast.makeText(
+                                    this,
+                                    "Unable to load competitive stats",
+                                    Toast.LENGTH_LONG
+                            ).show();
+                        }
+                ) {
+
+                    @Override
+                    public Map<String, String> getHeaders() {
+
+                        return buildHeaders();
+                    }
+                };
+
+        request.setRetryPolicy(
+                new DefaultRetryPolicy(
+                        15000,
+                        0,
+                        1.0f
+                )
+        );
+
+        requestQueue.add(request);
     }
+
+    // ------------------------------------------------
+    // SETUP CHARACTERS
+    // ------------------------------------------------
+
+    private void setupCharacters() {
+
+        allCharacters.clear();
+
+        Collections.addAll(
+                allCharacters,
+                letters
+        );
+
+        Collections.addAll(
+                allCharacters,
+                numbers
+        );
+
+        Collections.addAll(
+                allCharacters,
+                punctuation
+        );
+    }
+
+    // ------------------------------------------------
+    // START GAME
+    // ------------------------------------------------
 
     private void startGame() {
+
+        if (!statsLoaded) {
+
+            Toast.makeText(
+                    this,
+                    "Waiting for your competitive profile",
+                    Toast.LENGTH_SHORT
+            ).show();
+
+            return;
+        }
+
+        handler.removeCallbacks(
+                timerRunnable
+        );
+
         correct = 0;
         combo = 0;
+        elapsedSeconds = 0;
         gameOver = false;
-        startTime = SystemClock.elapsedRealtime();
+        submittingResult = false;
 
-        txtFeedback.setText("One mistake ends your run.");
-        txtFeedback.setTextColor(Color.rgb(170, 181, 211));
+        previousAnswer = "";
+        currentAnswer = "";
 
-        setButtonsEnabled(true);
-        updateProgress();
+        deckPosition = 0;
+
+        txtFeedback.setText("");
+
+        txtCombo.setText(
+                "COMBO x0"
+        );
+
+        updateStats();
+
+        updateTimer();
+
+        if (networkMap != null) {
+
+            networkMap.setCorrect(0);
+        }
+
+        handler.postDelayed(
+                timerRunnable,
+                1000
+        );
+
         loadQuestion();
-
-        handler.removeCallbacks(timerRunnable);
-        handler.post(timerRunnable);
     }
 
-    private ArrayList<String> getLetterPool(int round) {
-        ArrayList<String> pool = new ArrayList<>();
+    // ------------------------------------------------
+    // LOAD QUESTION
+    // ------------------------------------------------
 
-        String[] easy = {
-                "E", "T", "I", "M", "A", "N"
-        };
+    private void loadQuestion() {
 
-        String[] medium = {
-                "E", "T", "I", "M", "A", "N",
-                "S", "O", "R", "H", "D", "L", "U"
-        };
+        if (gameOver) {
+            return;
+        }
 
-        String alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        int round =
+                correct + 1;
+
+        if (correct >= TARGET) {
+
+            winGame();
+
+            return;
+        }
+
+        ArrayList<String> pool =
+                getPoolForRound(round);
+
+        if (
+                questionDeck.isEmpty() ||
+                        deckPosition >= questionDeck.size() ||
+                        !questionDeck.containsAll(pool)
+        ) {
+
+            questionDeck.clear();
+
+            questionDeck.addAll(pool);
+
+            Collections.shuffle(
+                    questionDeck
+            );
+
+            deckPosition = 0;
+        }
+
+        String next =
+                questionDeck.get(
+                        deckPosition
+                );
+
+        if (
+                next.equals(previousAnswer) &&
+                        questionDeck.size() > 1
+        ) {
+
+            Collections.swap(
+                    questionDeck,
+                    deckPosition,
+                    (deckPosition + 1) %
+                            questionDeck.size()
+            );
+
+            next =
+                    questionDeck.get(
+                            deckPosition
+                    );
+        }
+
+        currentAnswer = next;
+
+        previousAnswer =
+                currentAnswer;
+
+        deckPosition++;
+
+        txtRound.setText(
+                "ROUND " +
+                        round +
+                        " / " +
+                        TARGET
+        );
+
+        txtCorrect.setText(
+                "CORRECT: " +
+                        correct
+        );
+
+        txtFeedback.setText("");
+
+        txtSignal.setText(
+                getMorse(
+                        currentAnswer
+                )
+        );
+
+        ArrayList<String> choices =
+                new ArrayList<>();
+
+        choices.add(
+                currentAnswer
+        );
+
+        Set<String> used =
+                new HashSet<>();
+
+        used.add(
+                currentAnswer
+        );
+
+        while (
+                choices.size() < 4
+        ) {
+
+            String option =
+                    pool.get(
+                            random.nextInt(
+                                    pool.size()
+                            )
+                    );
+
+            if (
+                    used.add(option)
+            ) {
+
+                choices.add(option);
+            }
+        }
+
+        Collections.shuffle(
+                choices
+        );
+
+        for (
+                int i = 0;
+                i < answerButtons.length;
+                i++
+        ) {
+
+            Button button =
+                    answerButtons[i];
+
+            button.setText(
+                    choices.get(i)
+            );
+
+            button.setEnabled(true);
+
+            button.setOnClickListener(
+                    v ->
+                            checkAnswer(
+                                    button
+                                            .getText()
+                                            .toString()
+                            )
+            );
+        }
+    }
+
+    // ------------------------------------------------
+    // QUESTION POOL
+    // ------------------------------------------------
+
+    private ArrayList<String> getPoolForRound(
+            int round
+    ) {
+
+        ArrayList<String> pool =
+                new ArrayList<>();
 
         if (round <= 5) {
-            Collections.addAll(pool, easy);
+
+            Collections.addAll(
+                    pool,
+                    "E", "T", "A",
+                    "I", "N", "M"
+            );
 
         } else if (round <= 10) {
-            Collections.addAll(pool, medium);
+
+            Collections.addAll(
+                    pool,
+                    letters
+            );
 
         } else if (round <= 15) {
-            for (char c : alphabet.toCharArray()) {
-                pool.add(String.valueOf(c));
-            }
+
+            Collections.addAll(
+                    pool,
+                    letters
+            );
+
+            Collections.addAll(
+                    pool,
+                    numbers
+            );
 
         } else {
-            for (char c : alphabet.toCharArray()) {
-                pool.add(String.valueOf(c));
-            }
 
-            for (int i = 0; i <= 9; i++) {
-                pool.add(String.valueOf(i));
-            }
+            Collections.addAll(
+                    pool,
+                    letters
+            );
+
+            Collections.addAll(
+                    pool,
+                    numbers
+            );
+
+            Collections.addAll(
+                    pool,
+                    punctuation
+            );
         }
 
         return pool;
     }
 
-    private void loadQuestion() {
-        if (gameOver) return;
+    // ------------------------------------------------
+    // MORSE
+    // ------------------------------------------------
 
-        int round = correct + 1;
-        ArrayList<String> pool = getLetterPool(round);
+    private String getMorse(
+            String character
+    ) {
 
-        String answer = pool.get(random.nextInt(pool.size()));
+        int index = -1;
 
-        ArrayList<String> options = new ArrayList<>();
-        options.add(answer);
+        for (
+                int i = 0;
+                i < letters.length;
+                i++
+        ) {
 
-        while (options.size() < 4) {
-            String choice = pool.get(random.nextInt(pool.size()));
+            if (
+                    letters[i]
+                            .equals(character)
+            ) {
 
-            if (!options.contains(choice)) {
-                options.add(choice);
+                index = i;
+
+                break;
             }
         }
 
-        Collections.shuffle(options);
+        if (index >= 0) {
 
-        txtSignal.setText(morse.get(answer));
-        txtSignal.setTag(answer);
-        txtRound.setText(round + " / " + TARGET);
-
-        for (int i = 0; i < answerButtons.length; i++) {
-            Button button = answerButtons[i];
-
-            button.setText(options.get(i));
-            button.setEnabled(true);
-            button.setBackgroundTintList(
-                    ColorStateList.valueOf(
-                            Color.rgb(52, 48, 120)
-                    )
-            );
+            return morse[index];
         }
+
+        for (
+                int i = 0;
+                i < numbers.length;
+                i++
+        ) {
+
+            if (
+                    numbers[i]
+                            .equals(character)
+            ) {
+
+                return morse[
+                        letters.length + i
+                        ];
+            }
+        }
+
+        for (
+                int i = 0;
+                i < punctuation.length;
+                i++
+        ) {
+
+            if (
+                    punctuation[i]
+                            .equals(character)
+            ) {
+
+                return morse[
+                        letters.length +
+                                numbers.length +
+                                i
+                        ];
+            }
+        }
+
+        return "";
     }
 
-    private void checkAnswer(String selected) {
-        if (gameOver) return;
+    // ------------------------------------------------
+    // CHECK ANSWER
+    // ------------------------------------------------
 
-        Object tag = txtSignal.getTag();
-        if (tag == null) return;
+    private void checkAnswer(
+            String selected
+    ) {
 
-        String answer = tag.toString();
+        if (
+                gameOver ||
+                        submittingResult
+        ) {
 
-        if (selected.equals(answer)) {
+            return;
+        }
+
+        if (
+                selected.equals(
+                        currentAnswer
+                )
+        ) {
+
             correct++;
+
             combo++;
 
             txtFeedback.setText(
-                    "Signal accepted. Connection restored."
-            );
-            txtFeedback.setTextColor(
-                    Color.rgb(85, 233, 242)
+                    "CORRECT!"
             );
 
-            updateProgress();
-            showMilestone();
+            txtCorrect.setText(
+                    "CORRECT: " +
+                            correct
+            );
 
-            if (correct >= TARGET) {
-                winGame();
+            txtCombo.setText(
+                    "COMBO x" +
+                            combo
+            );
+
+            if (
+                    networkMap != null
+            ) {
+
+                networkMap.setCorrect(
+                        correct
+                );
+            }
+
+            if (
+                    combo == 5 ||
+                            combo == 10 ||
+                            combo == 15
+            ) {
+
+                Toast.makeText(
+                        this,
+                        combo + " STREAK!",
+                        Toast.LENGTH_SHORT
+                ).show();
+            }
+
+            disableAnswerButtons();
+
+            if (
+                    correct >= TARGET
+            ) {
+
+                handler.postDelayed(
+                        this::winGame,
+                        300
+                );
+
             } else {
-                setButtonsEnabled(false);
 
-                handler.postDelayed(() -> {
-                    if (!gameOver) {
-                        loadQuestion();
-                    }
-                }, 250);
+                handler.postDelayed(
+                        this::loadQuestion,
+                        300
+                );
             }
 
         } else {
-            // No answer reveal. One mistake ends the run.
+
+            combo = 0;
+
             loseGame();
         }
     }
 
-    private void updateProgress() {
-        txtCorrect.setText(String.valueOf(correct));
-        txtCombo.setText("🔥 " + combo);
-
-        int round = Math.min(correct + 1, TARGET);
-        txtRound.setText(round + " / " + TARGET);
-
-        networkMap.setCorrect(correct);
-    }
-
-    private void showMilestone() {
-        if (combo == 5 || combo == 10 || combo == 15) {
-            Toast.makeText(
-                    this,
-                    "🔥 " + combo + " STREAK!",
-                    Toast.LENGTH_SHORT
-            ).show();
-        }
-    }
-
-    private void setButtonsEnabled(boolean enabled) {
-        for (Button button : answerButtons) {
-            button.setEnabled(enabled);
-        }
-    }
-
-    private void updateTimer() {
-        long elapsed =
-                SystemClock.elapsedRealtime() - startTime;
-
-        long seconds = elapsed / 1000;
-        long minutes = seconds / 60;
-        seconds %= 60;
-
-        txtTime.setText(String.format(
-                Locale.getDefault(),
-                "%02d:%02d",
-                minutes,
-                seconds
-        ));
-    }
-
-    private long getElapsedTime() {
-        return (SystemClock.elapsedRealtime() - startTime)
-                / 1000;
-    }
-
-    private String formatTime(long seconds) {
-        long minutes = seconds / 60;
-        long remainingSeconds = seconds % 60;
-
-        return String.format(
-                Locale.getDefault(),
-                "%02d:%02d",
-                minutes,
-                remainingSeconds
-        );
-    }
+    // ------------------------------------------------
+    // WIN
+    // ------------------------------------------------
 
     private void winGame() {
-        if (gameOver) return;
 
-        gameOver = true;
-        handler.removeCallbacks(timerRunnable);
-        setButtonsEnabled(false);
+        if (
+                gameOver ||
+                        submittingResult
+        ) {
 
-        long elapsed = getElapsedTime();
-
-        wins++;
-
-        if (bestTime == 0 || elapsed < bestTime) {
-            bestTime = elapsed;
+            return;
         }
 
-        saveStats();
-        updateProfileStats();
+        gameOver = true;
 
-        showResultDialog(
-                "NETWORK RESTORED",
-                "You completed all 20 rounds!\n\n"
-                        + "Correct signals: 20 / 20\n"
-                        + "Time: " + formatTime(elapsed)
-                        + "\nBest time: " + formatTime(bestTime)
-                        + "\n\nVictory!"
+        submittingResult = true;
+
+        handler.removeCallbacks(
+                timerRunnable
+        );
+
+        disableAnswerButtons();
+
+        submitMatchResult(
+                "win",
+                elapsedSeconds,
+                0
         );
     }
+
+    // ------------------------------------------------
+    // LOSS
+    // ------------------------------------------------
 
     private void loseGame() {
-        if (gameOver) return;
+
+        if (
+                gameOver ||
+                        submittingResult
+        ) {
+
+            return;
+        }
 
         gameOver = true;
-        handler.removeCallbacks(timerRunnable);
-        setButtonsEnabled(false);
 
-        losses++;
+        submittingResult = true;
 
-        saveStats();
-        updateProfileStats();
+        handler.removeCallbacks(
+                timerRunnable
+        );
 
-        long elapsed = getElapsedTime();
+        disableAnswerButtons();
 
-        showResultDialog(
-                "SIGNAL LOST",
-                "Your run has ended.\n\n"
-                        + "Correct signals: " + correct + " / 20\n"
-                        + "Time survived: " + formatTime(elapsed)
-                        + "\n\nNo second chances. Try again."
+        int questionNumber =
+                Math.min(
+                        TARGET,
+                        correct + 1
+                );
+
+        submitMatchResult(
+                "loss",
+                0,
+                questionNumber
         );
     }
 
-    private void showResultDialog(
-            String title,
-            String message
+    // ------------------------------------------------
+    // SUBMIT RESULT TO SUPABASE
+    // ------------------------------------------------
+
+    private void submitMatchResult(
+            String result,
+            int elapsed,
+            int questionNumber
     ) {
+
+        String token =
+                getSessionToken();
+
+        if (token.isEmpty()) {
+
+            submittingResult = false;
+
+            showSessionError();
+
+            return;
+        }
+
+        String url =
+                ApiConfig.BASE_URL +
+                        "record-match";
+
+        JSONObject body =
+                new JSONObject();
+
+        try {
+
+            body.put(
+                    "result",
+                    result
+            );
+
+            if (
+                    result.equals("win")
+            ) {
+
+                body.put(
+                        "elapsed_seconds",
+                        elapsed
+                );
+
+            } else {
+
+                body.put(
+                        "question_number",
+                        questionNumber
+                );
+            }
+
+        } catch (JSONException e) {
+
+            submittingResult = false;
+
+            Toast.makeText(
+                    this,
+                    "Unable to prepare match result",
+                    Toast.LENGTH_SHORT
+            ).show();
+
+            return;
+        }
+
+        JsonObjectRequest request =
+                new JsonObjectRequest(
+                        Request.Method.POST,
+                        url,
+                        body,
+
+                        response -> {
+
+                            submittingResult = false;
+
+                            boolean success =
+                                    response.optBoolean(
+                                            "success",
+                                            false
+                                    );
+
+                            if (!success) {
+
+                                Toast.makeText(
+                                        this,
+                                        response.optString(
+                                                "message",
+                                                "Unable to save match"
+                                        ),
+                                        Toast.LENGTH_LONG
+                                ).show();
+
+                                return;
+                            }
+
+                            JSONObject stats =
+                                    response.optJSONObject(
+                                            "stats"
+                                    );
+
+                            if (stats == null) {
+
+                                Toast.makeText(
+                                        this,
+                                        "Match saved, but stats were not returned",
+                                        Toast.LENGTH_LONG
+                                ).show();
+
+                                return;
+                            }
+
+                            updateServerStats(
+                                    stats
+                            );
+
+                            int mmrChange =
+                                    response.optInt(
+                                            "mmr_change",
+                                            0
+                                    );
+
+                            if (
+                                    result.equals("win")
+                            ) {
+
+                                showWinDialog(
+                                        mmrChange
+                                );
+
+                            } else {
+
+                                showLossDialog(
+                                        mmrChange
+                                );
+                            }
+                        },
+
+                        error -> {
+
+                            submittingResult = false;
+
+                            if (
+                                    error.networkResponse != null &&
+                                            error.networkResponse.statusCode == 401
+                            ) {
+
+                                showSessionError();
+
+                                return;
+                            }
+
+                            /*
+                             * IMPORTANT:
+                             * We do NOT update MMR locally here.
+                             *
+                             * If the server request fails,
+                             * the database remains the authority.
+                             */
+
+                            new AlertDialog.Builder(this)
+                                    .setTitle(
+                                            "RESULT NOT SAVED"
+                                    )
+                                    .setMessage(
+                                            "MorseConnect couldn't save this match result. Check your connection and try again."
+                                    )
+                                    .setCancelable(false)
+                                    .setPositiveButton(
+                                            "BACK",
+                                            (dialog, which) ->
+                                                    finish()
+                                    )
+                                    .show();
+                        }
+                ) {
+
+                    @Override
+                    public Map<String, String> getHeaders() {
+
+                        return buildHeaders();
+                    }
+                };
+
+        /*
+         * No automatic retry.
+         *
+         * This is important for a match-result endpoint.
+         * An automatic retry could potentially submit
+         * the same result twice.
+         */
+
+        request.setRetryPolicy(
+                new DefaultRetryPolicy(
+                        15000,
+                        0,
+                        1.0f
+                )
+        );
+
+        requestQueue.add(
+                request
+        );
+    }
+
+    // ------------------------------------------------
+    // UPDATE SERVER STATS
+    // ------------------------------------------------
+
+    private void updateServerStats(
+            JSONObject stats
+    ) {
+
+        serverMmr =
+                stats.optInt(
+                        "mmr",
+                        serverMmr
+                );
+
+        serverWins =
+                stats.optInt(
+                        "wins",
+                        serverWins
+                );
+
+        serverLosses =
+                stats.optInt(
+                        "losses",
+                        serverLosses
+                );
+
+        serverCurrentStreak =
+                stats.optInt(
+                        "current_streak",
+                        serverCurrentStreak
+                );
+
+        serverBestStreak =
+                stats.optInt(
+                        "best_streak",
+                        serverBestStreak
+                );
+
+        // Cache only.
+        // Supabase remains authoritative.
+
+        sessionPrefs
+                .edit()
+                .putInt(
+                        "mmr",
+                        serverMmr
+                )
+                .putInt(
+                        "wins",
+                        serverWins
+                )
+                .putInt(
+                        "losses",
+                        serverLosses
+                )
+                .putInt(
+                        "current_streak",
+                        serverCurrentStreak
+                )
+                .putInt(
+                        "best_streak",
+                        serverBestStreak
+                )
+                .apply();
+
+        updateStats();
+    }
+
+    // ------------------------------------------------
+    // UPDATE UI
+    // ------------------------------------------------
+
+    private void updateStats() {
+
+        int total =
+                serverWins +
+                        serverLosses;
+
+        int winRate =
+                total == 0
+                        ? 0
+                        : Math.round(
+                        (
+                                serverWins *
+                                        100f
+                        ) /
+                                total
+                );
+
+        txtMmr.setText(
+                "MMR  " +
+                        String.format(
+                                Locale.getDefault(),
+                                "%,d",
+                                serverMmr
+                        )
+        );
+
+        txtProfileStats.setText(
+                "WINS: " +
+                        serverWins +
+                        "     LOSSES: " +
+                        serverLosses +
+                        "\nWIN RATE: " +
+                        winRate +
+                        "%" +
+                        "     STREAK: " +
+                        serverCurrentStreak
+        );
+    }
+
+    // ------------------------------------------------
+    // WIN DIALOG
+    // ------------------------------------------------
+
+    private void showWinDialog(
+            int mmrChange
+    ) {
+
         new AlertDialog.Builder(this)
-                .setTitle(title)
-                .setMessage(message)
+                .setTitle(
+                        "NETWORK RESTORED!"
+                )
+                .setMessage(
+                        "You completed all 20 rounds!\n\n" +
+                                "Correct: " +
+                                correct +
+                                "/" +
+                                TARGET +
+                                "\nTime: " +
+                                formatTime(
+                                        elapsedSeconds
+                                ) +
+                                "\nMMR: +" +
+                                mmrChange +
+                                "\nNew rating: " +
+                                serverMmr
+                )
                 .setCancelable(false)
                 .setPositiveButton(
-                        "Play Again",
-                        (dialog, which) -> startGame()
+                        "PLAY AGAIN",
+                        (dialog, which) ->
+                                startGame()
                 )
                 .setNegativeButton(
-                        "Back",
-                        (dialog, which) -> finish()
+                        "BACK",
+                        (dialog, which) ->
+                                finish()
                 )
                 .show();
     }
 
-    private void loadStats() {
-        android.content.SharedPreferences prefs =
-                getSharedPreferences(PREFS, MODE_PRIVATE);
+    // ------------------------------------------------
+    // LOSS DIALOG
+    // ------------------------------------------------
 
-        wins = prefs.getInt("wins", 0);
-        losses = prefs.getInt("losses", 0);
-        bestTime = prefs.getLong("best_time", 0);
+    private void showLossDialog(
+            int mmrChange
+    ) {
+
+        new AlertDialog.Builder(this)
+                .setTitle(
+                        "TRANSMISSION LOST"
+                )
+                .setMessage(
+                        "Your network was interrupted.\n\n" +
+                                "Correct: " +
+                                correct +
+                                "/" +
+                                TARGET +
+                                "\nTime: " +
+                                formatTime(
+                                        elapsedSeconds
+                                ) +
+                                "\nMMR: " +
+                                mmrChange +
+                                "\nNew rating: " +
+                                serverMmr
+                )
+                .setCancelable(false)
+                .setPositiveButton(
+                        "TRY AGAIN",
+                        (dialog, which) ->
+                                startGame()
+                )
+                .setNegativeButton(
+                        "BACK",
+                        (dialog, which) ->
+                                finish()
+                )
+                .show();
     }
 
-    private void saveStats() {
-        getSharedPreferences(PREFS, MODE_PRIVATE)
-                .edit()
-                .putInt("wins", wins)
-                .putInt("losses", losses)
-                .putLong("best_time", bestTime)
-                .apply();
+    // ------------------------------------------------
+    // READY DIALOG
+    // ------------------------------------------------
+
+    private void showReadyDialog() {
+
+        new AlertDialog.Builder(this)
+                .setTitle(
+                        "READY, ARCHITECT?"
+                )
+                .setMessage(
+                        "Your starting MMR: " +
+                                serverMmr +
+                                "\n\nYou have 20 rounds. One mistake ends your run."
+                )
+                .setCancelable(false)
+                .setPositiveButton(
+                        "START",
+                        (dialog, which) ->
+                                beginCountdown()
+                )
+                .setNegativeButton(
+                        "BACK",
+                        (dialog, which) ->
+                                finish()
+                )
+                .show();
     }
 
-    private void updateProfileStats() {
-        int total = wins + losses;
+    // ------------------------------------------------
+    // COUNTDOWN
+    // ------------------------------------------------
 
-        int winRate = total == 0
-                ? 0
-                : Math.round((wins * 100f) / total);
+    private void beginCountdown() {
 
-        String best = bestTime == 0
-                ? "--:--"
-                : formatTime(bestTime);
+        final int[] count = {
+                3
+        };
 
-        txtProfileStats.setText(
-                "WINS " + wins
-                        + "     LOSSES " + losses
-                        + "     WIN RATE " + winRate + "%"
-                        + "     BEST " + best
+        countdownDialog =
+                new AlertDialog.Builder(this)
+                        .setTitle(
+                                "GET READY"
+                        )
+                        .setMessage(
+                                "Starting in 3..."
+                        )
+                        .setCancelable(false)
+                        .create();
+
+        countdownDialog.show();
+
+        countdownRunnable =
+                new Runnable() {
+
+                    @Override
+                    public void run() {
+
+                        if (
+                                isFinishing() ||
+                                        isDestroyed()
+                        ) {
+
+                            return;
+                        }
+
+                        if (
+                                count[0] > 0
+                        ) {
+
+                            countdownDialog
+                                    .setMessage(
+                                            "Starting in " +
+                                                    count[0] +
+                                                    "..."
+                                    );
+
+                            count[0]--;
+
+                            handler.postDelayed(
+                                    this,
+                                    1000
+                            );
+
+                        } else {
+
+                            countdownDialog.dismiss();
+
+                            countdownDialog = null;
+
+                            countdownRunnable = null;
+
+                            startGame();
+                        }
+                    }
+                };
+
+        handler.post(
+                countdownRunnable
         );
     }
 
+    // ------------------------------------------------
+    // HEADERS
+    // ------------------------------------------------
+
+    private Map<String, String> buildHeaders() {
+
+        Map<String, String> headers =
+                new HashMap<>();
+
+        headers.put(
+                "Content-Type",
+                "application/json"
+        );
+
+        headers.put(
+                "apikey",
+                ApiConfig.SUPABASE_ANON_KEY
+        );
+
+        headers.put(
+                "Authorization",
+                "Bearer " +
+                        getSessionToken()
+        );
+
+        return headers;
+    }
+
+    // ------------------------------------------------
+    // SESSION TOKEN
+    // ------------------------------------------------
+
+    private String getSessionToken() {
+
+        String token =
+                sessionPrefs.getString(
+                        "session_token",
+                        ""
+                );
+
+        if (token == null) {
+            return "";
+        }
+
+        return token.trim();
+    }
+
+    // ------------------------------------------------
+    // SESSION ERROR
+    // ------------------------------------------------
+
+    private void showSessionError() {
+
+        new AlertDialog.Builder(this)
+                .setTitle(
+                        "LOGIN REQUIRED"
+                )
+                .setMessage(
+                        "Your login session is missing or expired. Please log in again."
+                )
+                .setCancelable(false)
+                .setPositiveButton(
+                        "OK",
+                        (dialog, which) ->
+                                finish()
+                )
+                .show();
+    }
+
+    // ------------------------------------------------
+    // DISABLE ANSWERS
+    // ------------------------------------------------
+
+    private void disableAnswerButtons() {
+
+        for (
+                Button button :
+                answerButtons
+        ) {
+
+            button.setEnabled(false);
+        }
+    }
+
+    // ------------------------------------------------
+    // TIMER
+    // ------------------------------------------------
+
+    private void updateTimer() {
+
+        txtTime.setText(
+                formatTime(
+                        elapsedSeconds
+                )
+        );
+    }
+
+    private String formatTime(
+            int seconds
+    ) {
+
+        return String.format(
+                Locale.getDefault(),
+                "%02d:%02d",
+                seconds / 60,
+                seconds % 60
+        );
+    }
+
+    // ------------------------------------------------
+    // DESTROY
+    // ------------------------------------------------
+
     @Override
     protected void onDestroy() {
-        handler.removeCallbacks(timerRunnable);
+
+        handler.removeCallbacks(
+                timerRunnable
+        );
+
+        if (
+                countdownRunnable != null
+        ) {
+
+            handler.removeCallbacks(
+                    countdownRunnable
+            );
+        }
+
+        if (
+                countdownDialog != null &&
+                        countdownDialog.isShowing()
+        ) {
+
+            countdownDialog.dismiss();
+        }
+
+        if (
+                requestQueue != null
+        ) {
+
+            requestQueue.cancelAll(
+                    request ->
+                            true
+            );
+        }
+
         super.onDestroy();
     }
 }

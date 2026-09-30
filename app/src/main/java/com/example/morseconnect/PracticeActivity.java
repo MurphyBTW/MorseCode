@@ -55,8 +55,11 @@ public class PracticeActivity extends AppCompatActivity {
         setContentView(R.layout.activity_practice);
 
         if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().hide();
         }
+
+        TextView btnBack = findViewById(R.id.btnBack);
+        btnBack.setOnClickListener(v -> finish());
 
         txtQuestion = findViewById(R.id.txtQuestion);
         txtInput = findViewById(R.id.txtInput);

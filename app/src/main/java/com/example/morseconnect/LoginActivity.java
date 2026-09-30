@@ -1,6 +1,7 @@
 package com.example.morseconnect;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
@@ -24,6 +25,13 @@ public class LoginActivity extends AppCompatActivity {
     Button btnLogin, btnSignup;
     TextView txtForgot;
 
+    // ------------------------------------------------
+    // SESSION STORAGE
+    // ------------------------------------------------
+
+    private static final String SESSION_PREFS =
+            "morseconnect_session";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -35,17 +43,28 @@ public class LoginActivity extends AppCompatActivity {
         btnSignup = findViewById(R.id.btnSignup);
         txtForgot = findViewById(R.id.txtForgot);
 
+        // ------------------------------------------------
+        // FORGOT PASSWORD
+        // ------------------------------------------------
+
         txtForgot.setOnClickListener(v -> {
+
             Intent intent = new Intent(
                     LoginActivity.this,
                     ForgotPasswordActivity.class
             );
+
             startActivity(intent);
         });
+
+        // ------------------------------------------------
+        // BACK BUTTON
+        // ------------------------------------------------
 
         getOnBackPressedDispatcher().addCallback(
                 this,
                 new androidx.activity.OnBackPressedCallback(true) {
+
                     @Override
                     public void handleOnBackPressed() {
                         finish();
@@ -53,28 +72,53 @@ public class LoginActivity extends AppCompatActivity {
                 }
         );
 
-        btnLogin.setOnClickListener(v -> attemptLogin());
+        // ------------------------------------------------
+        // LOGIN
+        // ------------------------------------------------
+
+        btnLogin.setOnClickListener(
+                v -> attemptLogin()
+        );
+
+        // ------------------------------------------------
+        // SIGN UP
+        // ------------------------------------------------
 
         btnSignup.setOnClickListener(v -> {
+
             Intent intent = new Intent(
                     LoginActivity.this,
                     SignupActivity.class
             );
+
             startActivity(intent);
         });
     }
 
+    // ------------------------------------------------
+    // LOGIN REQUEST
+    // ------------------------------------------------
+
     private void attemptLogin() {
 
-        String user = edtUser.getText().toString().trim();
-        String pass = edtPass.getText().toString().trim();
+        String username =
+                edtUser.getText()
+                        .toString()
+                        .trim();
 
-        if (user.isEmpty() || pass.isEmpty()) {
+        String password =
+                edtPass.getText()
+                        .toString();
+
+        if (username.isEmpty() ||
+                password.isEmpty()) {
+
             Toast.makeText(
                     this,
                     "Enter credentials",
                     Toast.LENGTH_SHORT
             ).show();
+
             return;
         }
 
@@ -90,16 +134,26 @@ public class LoginActivity extends AppCompatActivity {
 
         Log.d(
                 "LOGIN_REQUEST",
-                "Username: " + user
+                "Username: " + username
         );
 
         JSONObject jsonBody =
                 new JSONObject();
 
         try {
-            jsonBody.put("username", user);
-            jsonBody.put("password", pass);
+
+            jsonBody.put(
+                    "username",
+                    username
+            );
+
+            jsonBody.put(
+                    "password",
+                    password
+            );
+
         } catch (JSONException e) {
+
             btnLogin.setEnabled(true);
 
             Log.e(
@@ -110,6 +164,10 @@ public class LoginActivity extends AppCompatActivity {
 
             return;
         }
+
+        // ------------------------------------------------
+        // VOLLEY REQUEST
+        // ------------------------------------------------
 
         JsonObjectRequest request =
                 new JsonObjectRequest(
@@ -123,57 +181,18 @@ public class LoginActivity extends AppCompatActivity {
 
                             Log.d(
                                     "LOGIN_RESPONSE",
-                                    "Server response: " +
-                                            response.toString()
+                                    "Server response received"
                             );
 
                             try {
 
                                 boolean success =
-                                        response.getBoolean(
-                                                "success"
+                                        response.optBoolean(
+                                                "success",
+                                                false
                                         );
 
-                                if (success) {
-
-                                    String role =
-                                            response.optString(
-                                                    "role",
-                                                    ""
-                                            );
-
-                                    String userId =
-                                            response.optString(
-                                                    "user_id",
-                                                    ""
-                                            );
-
-                                    Log.d(
-                                            "LOGIN_SUCCESS",
-                                            "Login successful"
-                                    );
-
-                                    Intent intent =
-                                            new Intent(
-                                                    LoginActivity.this,
-                                                    MainActivity.class
-                                            );
-
-                                    intent.putExtra(
-                                            "role",
-                                            role
-                                    );
-
-                                    intent.putExtra(
-                                            "user_id",
-                                            userId
-                                    );
-
-                                    startActivity(intent);
-
-                                    finish();
-
-                                } else {
+                                if (!success) {
 
                                     String message =
                                             response.optString(
@@ -207,13 +226,228 @@ public class LoginActivity extends AppCompatActivity {
                                             message,
                                             Toast.LENGTH_SHORT
                                     ).show();
+
+                                    return;
                                 }
 
-                            } catch (JSONException e) {
+                                // ------------------------------------------------
+                                // SESSION TOKEN
+                                // ------------------------------------------------
+
+                                String sessionToken =
+                                        response.optString(
+                                                "session_token",
+                                                ""
+                                        );
+
+                                String sessionExpiresAt =
+                                        response.optString(
+                                                "session_expires_at",
+                                                ""
+                                        );
+
+                                if (sessionToken.isEmpty()) {
+
+                                    Log.e(
+                                            "LOGIN_ERROR",
+                                            "Server did not return session token"
+                                    );
+
+                                    Toast.makeText(
+                                            LoginActivity.this,
+                                            "Unable to create login session",
+                                            Toast.LENGTH_LONG
+                                    ).show();
+
+                                    return;
+                                }
+
+                                // ------------------------------------------------
+                                // USER OBJECT
+                                // ------------------------------------------------
+
+                                JSONObject userObject =
+                                        response.optJSONObject(
+                                                "user"
+                                        );
+
+                                if (userObject == null) {
+
+                                    Log.e(
+                                            "LOGIN_ERROR",
+                                            "Server did not return user object"
+                                    );
+
+                                    Toast.makeText(
+                                            LoginActivity.this,
+                                            "Invalid account information",
+                                            Toast.LENGTH_LONG
+                                    ).show();
+
+                                    return;
+                                }
+
+                                long userId =
+                                        userObject.optLong(
+                                                "id",
+                                                -1
+                                        );
+
+                                String firstName =
+                                        userObject.optString(
+                                                "first_name",
+                                                ""
+                                        );
+
+                                String lastName =
+                                        userObject.optString(
+                                                "last_name",
+                                                ""
+                                        );
+
+                                String loggedInUsername =
+                                        userObject.optString(
+                                                "username",
+                                                ""
+                                        );
+
+                                String email =
+                                        userObject.optString(
+                                                "email",
+                                                ""
+                                        );
+
+                                String role =
+                                        userObject.optString(
+                                                "role",
+                                                "user"
+                                        );
+
+                                String createdAt =
+                                        userObject.optString(
+                                                "created_at",
+                                                ""
+                                        );
+
+                                if (userId <= 0) {
+
+                                    Log.e(
+                                            "LOGIN_ERROR",
+                                            "Invalid user ID returned"
+                                    );
+
+                                    Toast.makeText(
+                                            LoginActivity.this,
+                                            "Invalid account information",
+                                            Toast.LENGTH_LONG
+                                    ).show();
+
+                                    return;
+                                }
+
+                                // ------------------------------------------------
+                                // SAVE LOGIN SESSION
+                                // ------------------------------------------------
+
+                                SharedPreferences sessionPrefs =
+                                        getSharedPreferences(
+                                                SESSION_PREFS,
+                                                MODE_PRIVATE
+                                        );
+
+                                sessionPrefs
+                                        .edit()
+
+                                        .putString(
+                                                "session_token",
+                                                sessionToken
+                                        )
+
+                                        .putString(
+                                                "session_expires_at",
+                                                sessionExpiresAt
+                                        )
+
+                                        .putLong(
+                                                "user_id",
+                                                userId
+                                        )
+
+                                        .putString(
+                                                "first_name",
+                                                firstName
+                                        )
+
+                                        .putString(
+                                                "last_name",
+                                                lastName
+                                        )
+
+                                        .putString(
+                                                "username",
+                                                loggedInUsername
+                                        )
+
+                                        .putString(
+                                                "email",
+                                                email
+                                        )
+
+                                        .putString(
+                                                "role",
+                                                role
+                                        )
+
+                                        .putString(
+                                                "created_at",
+                                                createdAt
+                                        )
+
+                                        .putBoolean(
+                                                "logged_in",
+                                                true
+                                        )
+
+                                        .apply();
+
+                                Log.d(
+                                        "LOGIN_SUCCESS",
+                                        "Login successful for user ID: " +
+                                                userId
+                                );
+
+                                // ------------------------------------------------
+                                // OPEN MAIN ACTIVITY
+                                // ------------------------------------------------
+
+                                Intent intent =
+                                        new Intent(
+                                                LoginActivity.this,
+                                                MainActivity.class
+                                        );
+
+                                // Keep these for compatibility with
+                                // your existing MainActivity code.
+
+                                intent.putExtra(
+                                        "role",
+                                        role
+                                );
+
+                                intent.putExtra(
+                                        "user_id",
+                                        String.valueOf(userId)
+                                );
+
+                                startActivity(intent);
+
+                                finish();
+
+                            } catch (Exception e) {
 
                                 Log.e(
                                         "LOGIN_ERROR",
-                                        "Invalid JSON response",
+                                        "Invalid login response",
                                         e
                                 );
 
@@ -235,16 +469,18 @@ public class LoginActivity extends AppCompatActivity {
                                     error
                             );
 
+                            // ------------------------------------------------
+                            // SERVER RETURNED HTTP RESPONSE
+                            // ------------------------------------------------
+
                             if (error.networkResponse != null) {
 
                                 int statusCode =
                                         error.networkResponse.statusCode;
 
-                                String responseBody =
-                                        "";
+                                String responseBody = "";
 
-                                if (error.networkResponse.data
-                                        != null) {
+                                if (error.networkResponse.data != null) {
 
                                     responseBody =
                                             new String(
@@ -277,6 +513,10 @@ public class LoginActivity extends AppCompatActivity {
                                                     "Login failed"
                                             );
 
+                                    // ------------------------------------------------
+                                    // ACCOUNT LOCKED
+                                    // ------------------------------------------------
+
                                     if (statusCode == 429) {
 
                                         int retryAfter =
@@ -297,7 +537,13 @@ public class LoginActivity extends AppCompatActivity {
                                                 Toast.LENGTH_LONG
                                         ).show();
 
-                                    } else if (statusCode == 401) {
+                                    }
+
+                                    // ------------------------------------------------
+                                    // WRONG PASSWORD / USER
+                                    // ------------------------------------------------
+
+                                    else if (statusCode == 401) {
 
                                         int attemptsRemaining =
                                                 errorJson.optInt(
@@ -313,8 +559,7 @@ public class LoginActivity extends AppCompatActivity {
                                                             attemptsRemaining +
                                                             " attempt" +
                                                             (
-                                                                    attemptsRemaining
-                                                                            == 1
+                                                                    attemptsRemaining == 1
                                                                             ? ""
                                                                             : "s"
                                                             ) +
@@ -327,7 +572,13 @@ public class LoginActivity extends AppCompatActivity {
                                                 Toast.LENGTH_SHORT
                                         ).show();
 
-                                    } else if (statusCode == 400) {
+                                    }
+
+                                    // ------------------------------------------------
+                                    // BAD REQUEST
+                                    // ------------------------------------------------
+
+                                    else if (statusCode == 400) {
 
                                         Toast.makeText(
                                                 LoginActivity.this,
@@ -335,7 +586,13 @@ public class LoginActivity extends AppCompatActivity {
                                                 Toast.LENGTH_SHORT
                                         ).show();
 
-                                    } else if (statusCode >= 500) {
+                                    }
+
+                                    // ------------------------------------------------
+                                    // SERVER ERROR
+                                    // ------------------------------------------------
+
+                                    else if (statusCode >= 500) {
 
                                         Toast.makeText(
                                                 LoginActivity.this,
@@ -343,7 +600,13 @@ public class LoginActivity extends AppCompatActivity {
                                                 Toast.LENGTH_LONG
                                         ).show();
 
-                                    } else {
+                                    }
+
+                                    // ------------------------------------------------
+                                    // OTHER ERROR
+                                    // ------------------------------------------------
+
+                                    else {
 
                                         Toast.makeText(
                                                 LoginActivity.this,
@@ -367,7 +630,13 @@ public class LoginActivity extends AppCompatActivity {
                                     ).show();
                                 }
 
-                            } else {
+                            }
+
+                            // ------------------------------------------------
+                            // NETWORK ERROR
+                            // ------------------------------------------------
+
+                            else {
 
                                 Log.e(
                                         "LOGIN_ERROR",
@@ -381,7 +650,8 @@ public class LoginActivity extends AppCompatActivity {
                                     Log.e(
                                             "LOGIN_ERROR",
                                             "CAUSE: " +
-                                                    error.getCause().toString(),
+                                                    error.getCause()
+                                                            .toString(),
                                             error.getCause()
                                     );
                                 }
@@ -395,8 +665,13 @@ public class LoginActivity extends AppCompatActivity {
                         }
                 ) {
 
+                    // ------------------------------------------------
+                    // REQUEST HEADERS
+                    // ------------------------------------------------
+
                     @Override
-                    public java.util.Map<String, String> getHeaders() {
+                    public java.util.Map<String, String>
+                    getHeaders() {
 
                         java.util.Map<String, String> headers =
                                 new java.util.HashMap<>();
@@ -408,12 +683,16 @@ public class LoginActivity extends AppCompatActivity {
 
                         headers.put(
                                 "apikey",
-                                "sb_publishable_DYAEFbzuk9uVLyYYxD7mxA_SG4aE1iN"
+                                ApiConfig.SUPABASE_ANON_KEY
                         );
 
                         return headers;
                     }
                 };
+
+        // ------------------------------------------------
+        // SEND REQUEST
+        // ------------------------------------------------
 
         RequestQueue queue =
                 Volley.newRequestQueue(this);

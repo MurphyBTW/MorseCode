@@ -1,15 +1,15 @@
+
 package com.example.morseconnect;
 
 import java.util.*;
 
 public class MorseDatabase {
 
-    //  NEW STRUCTURED DATA (for LearnActivity with categories)
     public static Map<String, Map<String, String>> getCategorizedMorse() {
 
         Map<String, Map<String, String>> data = new LinkedHashMap<>();
 
-        //  LETTERS
+        // LETTERS
         Map<String, String> letters = new LinkedHashMap<>();
         letters.put("A", ".-");
         letters.put("B", "-...");
@@ -51,7 +51,7 @@ public class MorseDatabase {
         numbers.put("8", "---..");
         numbers.put("9", "----.");
 
-        //  SYMBOLS
+        // SYMBOLS
         Map<String, String> symbols = new LinkedHashMap<>();
         symbols.put(".", ".-.-.-");
         symbols.put(",", "--..--");
@@ -59,19 +59,58 @@ public class MorseDatabase {
         symbols.put("!", "-.-.--");
         symbols.put("/", "-..-.");
 
-        //  PROSIGNS
+        // PROSIGNS AND COMMON PROCEDURAL SIGNALS
+        // Prosigns are sent as one continuous Morse sequence.
+        // Common operating abbreviations are separated by spaces.
         Map<String, String> prosigns = new LinkedHashMap<>();
-        prosigns.put("SOS", "...---...");
-        prosigns.put("AR (End)", ".-.-.");
-        prosigns.put("SK (Stop)", "...-.-");
-        prosigns.put("BT (Break)", "-...-");
 
-        //  WORDS
+        prosigns.put("AR (End of message)", ".-.-.");
+        prosigns.put("SK (End of contact)", "...-.-");
+        prosigns.put("BT (Separator)", "-...-");
+        prosigns.put("AS (Wait)", ".-...");
+        prosigns.put("KA (Start signal)", "-.-.-");
+        prosigns.put("HH (Error)", "........");
+        prosigns.put("KN (Over to named station)", "-.--.");
+        prosigns.put("BK (Break-in)", "-...-.-");
+        prosigns.put("CL (Closing station)", "-.-..-..");
+        prosigns.put("CT (Starting signal)", "-.-.-");
+        prosigns.put("SN (Understood)", "...-.");
+        prosigns.put("VA (End of work)", "...-.-");
+        prosigns.put("SOS (Distress)", "...---...");
+        prosigns.put("IMI (Repeat)", "..--..");
+        prosigns.put("INT (Interrogative)", "..-.-");
+
+        // Common operating abbreviations (letters sent separately)
+        prosigns.put("CQ (Calling any station)", "-.-. --.-");
+        prosigns.put("DE (This is)", "-.. .");
+        prosigns.put("K (Go ahead)", "-.-");
+        prosigns.put("R (Received)", ".-.");
+        prosigns.put("QSL (Confirmation)", "--.- ... .-..");
+
+        // WORDS
+        // Each letter is separated by a space for readable playback.
         Map<String, String> words = new LinkedHashMap<>();
-        words.put("OK", "---.-");
+
         words.put("HI", ".... ..");
-        words.put("YES", "-.-- . ...");
         words.put("NO", "-. ---");
+        words.put("YES", "-.-- . ...");
+        words.put("GO", "--. ---");
+        words.put("STOP", "... - --- .--.");
+        words.put("HELP", ".... . .-.. .--.");
+        words.put("LOVE", ".-.. --- ...- .");
+        words.put("CODE", "-.-. --- -.. .");
+        words.put("TEST", "- . ... -");
+        words.put("RUN", ".-. ..- -.");
+        words.put("WAIT", ".-- .- .. -");
+        words.put("COME", "-.-. --- -- .");
+        words.put("HERE", ".... . .-. .");
+        words.put("SAFE", "... .- ..-. .");
+        words.put("HOME", ".... --- -- .");
+        words.put("OK", "--- -.-");
+        words.put("BYE", "-... -.-- .");
+        words.put("CAT", "-.-. .- -");
+        words.put("DOG", "-.. --- --.");
+        words.put("UP", "..- .--.");
 
         data.put("Letters", letters);
         data.put("Numbers", numbers);
@@ -82,7 +121,7 @@ public class MorseDatabase {
         return data;
     }
 
-    //  OLD METHOD (FOR PRACTICE MODE — NO ERRORS)
+    // OLD METHOD FOR PRACTICE MODE
     public static Map<String, String> getMorseMap() {
         return getCategorizedMorse().get("Letters");
     }
