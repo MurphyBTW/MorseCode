@@ -258,45 +258,124 @@ public class LearnActivity extends AppCompatActivity {
     private void playMorse(String code) {
         cancelPlayback();
 
-        if (code == null || code.trim().isEmpty()) {
-            return;
-        }
+        if (code == null || code.trim().isEmpty()) return;
 
         isPlaying = true;
         btnPlay.setText("Stop");
 
-        long delay = 0;
+        byte[] audioData = buildMorseAudio(code);
+        if (audioData.length == 0) {
+            cancelPlayback();
+            return;
+        }
 
+        try {
+            audioTrack = new AudioTrack(
+                    AudioManager.STREAM_MUSIC,
+                    44100,
+                    AudioFormat.CHANNEL_OUT_MONO,
+                    AudioFormat.ENCODING_PCM_16BIT,
+                    audioData.length,
+                    AudioTrack.MODE_STATIC
+            );
+            audioTrack.write(audioData, 0, audioData.length);
+            audioTrack.play();
+        } catch (Exception e) {
+            releaseAudioTrack();
+            cancelPlayback();
+            return;
+        }
+
+        long delay = 0;
         for (char c : code.toCharArray()) {
             if (c == '.') {
                 scheduleSignal(delay, unitMs);
                 delay += unitMs * 2L;
-
             } else if (c == '-') {
                 scheduleSignal(delay, unitMs * 3);
                 delay += unitMs * 4L;
-
             } else if (c == ' ') {
                 delay += unitMs * 2L;
             }
         }
 
         Runnable finishTask = () -> {
-            stopSignal();
+            setSignalVisual(false);
+            releaseAudioTrack();
             isPlaying = false;
             btnPlay.setText("Play");
             playbackTasks.clear();
         };
+        postPlayback(finishTask, delay + 80L);
+    }
 
-        postPlayback(finishTask, delay);
+    private byte[] buildMorseAudio(String code) {
+        final int sampleRate = 44100;
+        int totalSamples = 0;
+        for (char c : code.toCharArray()) {
+            if (c == '.') totalSamples += msToSamples(unitMs * 2, sampleRate);
+            else if (c == '-') totalSamples += msToSamples(unitMs * 4, sampleRate);
+            else if (c == ' ') totalSamples += msToSamples(unitMs * 2, sampleRate);
+        }
+        totalSamples += msToSamples(30, sampleRate);
+
+        short[] pcm = new short[Math.max(1, totalSamples)];
+        int position = 0;
+        for (char c : code.toCharArray()) {
+            if (c == '.' || c == '-') {
+                int toneMs = c == '.' ? unitMs : unitMs * 3;
+                int toneSamples = msToSamples(toneMs, sampleRate);
+                writeSmoothTone(pcm, position, toneSamples, sampleRate);
+                position += toneSamples + msToSamples(unitMs, sampleRate);
+            } else if (c == ' ') {
+                position += msToSamples(unitMs * 2, sampleRate);
+            }
+        }
+
+        byte[] data = new byte[pcm.length * 2];
+        int index = 0;
+        for (short value : pcm) {
+            data[index++] = (byte) (value & 0xFF);
+            data[index++] = (byte) ((value >> 8) & 0xFF);
+        }
+        return data;
+    }
+
+    private int msToSamples(int ms, int sampleRate) {
+        return Math.max(0, (int) Math.round(sampleRate * (ms / 1000.0)));
+    }
+
+    private void writeSmoothTone(short[] buffer, int start, int length, int sampleRate) {
+        int safeFrequency = Math.max(100, frequency);
+        int fadeSamples = Math.min(msToSamples(5, sampleRate), Math.max(1, length / 2));
+        double phaseStep = 2.0 * Math.PI * safeFrequency / sampleRate;
+        for (int i = 0; i < length && start + i < buffer.length; i++) {
+            double envelope = 1.0;
+            if (i < fadeSamples) envelope = (double) i / fadeSamples;
+            else if (i >= length - fadeSamples) envelope = (double) (length - i - 1) / fadeSamples;
+            envelope = Math.max(0.0, Math.min(1.0, envelope));
+            buffer[start + i] = (short) (Math.sin(phaseStep * i) * 32767.0 * volume * envelope);
+        }
+    }
+
+    private void releaseAudioTrack() {
+        if (audioTrack != null) {
+            try { audioTrack.stop(); } catch (Exception ignored) {}
+            try { audioTrack.release(); } catch (Exception ignored) {}
+            audioTrack = null;
+        }
     }
 
     private void scheduleSignal(long startDelay, int duration) {
-        Runnable startTask = this::startSignal;
-        Runnable stopTask = this::stopSignal;
+        postPlayback(() -> setSignalVisual(true), startDelay);
+        postPlayback(() -> setSignalVisual(false), startDelay + duration);
+    }
 
-        postPlayback(startTask, startDelay);
-        postPlayback(stopTask, startDelay + duration);
+    private void setSignalVisual(boolean active) {
+        setFlashlight(active);
+        if (flashIndicator != null) {
+            flashIndicator.setBackgroundResource(active ? R.drawable.indicator_on : R.drawable.indicator_off);
+        }
     }
 
     private void postPlayback(Runnable task, long delay) {
@@ -321,86 +400,12 @@ public class LearnActivity extends AppCompatActivity {
 
     // This uses the same tone generation as PracticeActivity.
     private void startSignal() {
-        stopSignal();
-
-        int sampleRate = 44100;
-        double period = (double) sampleRate / Math.max(100, frequency);
-        int numSamples = Math.max(
-                441,
-                (int) (Math.round(period) * 50)
-        );
-
-        double[] sample = new double[numSamples];
-        byte[] generatedSnd = new byte[2 * numSamples];
-
-        for (int i = 0; i < numSamples; ++i) {
-            sample[i] = Math.sin(2 * Math.PI * i / period);
-        }
-
-        int idx = 0;
-
-        for (double dVal : sample) {
-            short val = (short) (dVal * 32767 * volume);
-            generatedSnd[idx++] = (byte) (val & 0x00ff);
-            generatedSnd[idx++] = (byte) ((val & 0xff00) >>> 8);
-        }
-
-        try {
-            audioTrack = new AudioTrack(
-                    AudioManager.STREAM_MUSIC,
-                    sampleRate,
-                    AudioFormat.CHANNEL_OUT_MONO,
-                    AudioFormat.ENCODING_PCM_16BIT,
-                    generatedSnd.length,
-                    AudioTrack.MODE_STATIC
-            );
-
-            audioTrack.write(
-                    generatedSnd,
-                    0,
-                    generatedSnd.length
-            );
-
-            audioTrack.setLoopPoints(0, numSamples, -1);
-            audioTrack.play();
-
-        } catch (Exception ignored) {
-            if (audioTrack != null) {
-                try {
-                    audioTrack.release();
-                } catch (Exception ignoredAgain) {
-                }
-                audioTrack = null;
-            }
-        }
-
-        setFlashlight(true);
-
-        if (flashIndicator != null) {
-            flashIndicator.setBackgroundResource(R.drawable.indicator_on);
-        }
+        setSignalVisual(true);
     }
 
     private void stopSignal() {
-        if (audioTrack != null) {
-            try {
-                audioTrack.stop();
-            } catch (Exception ignored) {
-            }
-
-            try {
-                audioTrack.release();
-            } catch (Exception ignored) {
-            }
-
-            audioTrack = null;
-        }
-
-        setFlashlight(false);
-
-        if (flashIndicator != null) {
-            flashIndicator.setBackgroundResource(R.drawable.indicator_off);
-        }
+        releaseAudioTrack();
+        setSignalVisual(false);
     }
 
     private void setFlashlight(boolean enabled) {

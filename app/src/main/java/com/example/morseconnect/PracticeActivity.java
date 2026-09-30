@@ -283,8 +283,30 @@ public class PracticeActivity extends AppCompatActivity {
 
     private void playMorse(String code) {
         handler.removeCallbacksAndMessages(null);
-        long delay = 0;
+        stopSignal();
 
+        if (code == null || code.trim().isEmpty()) return;
+
+        byte[] audioData = buildMorseAudio(code);
+        if (audioData.length == 0) return;
+
+        try {
+            audioTrack = new AudioTrack(
+                    AudioManager.STREAM_MUSIC,
+                    44100,
+                    AudioFormat.CHANNEL_OUT_MONO,
+                    AudioFormat.ENCODING_PCM_16BIT,
+                    audioData.length,
+                    AudioTrack.MODE_STATIC
+            );
+            audioTrack.write(audioData, 0, audioData.length);
+            audioTrack.play();
+        } catch (Exception e) {
+            releaseAudioTrack();
+            return;
+        }
+
+        long delay = 0;
         for (char c : code.toCharArray()) {
             if (c == '.') {
                 scheduleSignal(delay, unitMs);
@@ -296,11 +318,98 @@ public class PracticeActivity extends AppCompatActivity {
                 delay += unitMs * 2L;
             }
         }
+
+        handler.postDelayed(() -> {
+            setPlaybackVisual(false);
+            releaseAudioTrack();
+        }, delay + 80L);
+    }
+
+    private byte[] buildMorseAudio(String code) {
+        final int sampleRate = 44100;
+        int totalSamples = 0;
+
+        for (char c : code.toCharArray()) {
+            if (c == '.') totalSamples += msToSamples(unitMs * 2, sampleRate);
+            else if (c == '-') totalSamples += msToSamples(unitMs * 4, sampleRate);
+            else if (c == ' ') totalSamples += msToSamples(unitMs * 2, sampleRate);
+        }
+
+        totalSamples += msToSamples(30, sampleRate);
+        short[] pcm = new short[Math.max(1, totalSamples)];
+        int position = 0;
+
+        for (char c : code.toCharArray()) {
+            if (c == '.' || c == '-') {
+                int toneMs = c == '.' ? unitMs : unitMs * 3;
+                int toneSamples = msToSamples(toneMs, sampleRate);
+                writeSmoothTone(pcm, position, toneSamples, sampleRate);
+                position += toneSamples;
+                position += msToSamples(unitMs, sampleRate);
+            } else if (c == ' ') {
+                position += msToSamples(unitMs * 2, sampleRate);
+            }
+        }
+
+        byte[] data = new byte[pcm.length * 2];
+        int index = 0;
+        for (short value : pcm) {
+            data[index++] = (byte) (value & 0xFF);
+            data[index++] = (byte) ((value >> 8) & 0xFF);
+        }
+        return data;
+    }
+
+    private int msToSamples(int ms, int sampleRate) {
+        return Math.max(0, (int) Math.round(sampleRate * (ms / 1000.0)));
+    }
+
+    private void writeSmoothTone(short[] buffer, int start, int length, int sampleRate) {
+        int safeFrequency = Math.max(100, frequency);
+        int fadeSamples = Math.min(msToSamples(5, sampleRate), Math.max(1, length / 2));
+        double phaseStep = 2.0 * Math.PI * safeFrequency / sampleRate;
+
+        for (int i = 0; i < length && start + i < buffer.length; i++) {
+            double envelope = 1.0;
+            if (i < fadeSamples) envelope = (double) i / fadeSamples;
+            else if (i >= length - fadeSamples) envelope = (double) (length - i - 1) / fadeSamples;
+            envelope = Math.max(0.0, Math.min(1.0, envelope));
+            double sample = Math.sin(phaseStep * i) * envelope * volume;
+            buffer[start + i] = (short) (sample * 32767.0);
+        }
+    }
+
+    private void releaseAudioTrack() {
+        if (audioTrack != null) {
+            try { audioTrack.stop(); } catch (Exception ignored) {}
+            try { audioTrack.release(); } catch (Exception ignored) {}
+            audioTrack = null;
+        }
     }
 
     private void scheduleSignal(long start, int duration) {
-        handler.postDelayed(() -> setSignalActive(true), start);
-        handler.postDelayed(() -> setSignalActive(false), start + duration);
+        handler.postDelayed(() -> setPlaybackVisual(true), start);
+        handler.postDelayed(() -> setPlaybackVisual(false), start + duration);
+    }
+
+    private void setPlaybackVisual(boolean active) {
+        if (active) {
+            flashIndicator.setBackgroundResource(R.drawable.indicator_on_modern);
+            txtSignalState.setText("TRANSMITTING");
+            txtSignalState.setTextColor(0xFFD6A84F);
+            signalPanel.setStrokeColor(0xFFD6A84F);
+            animateWaveformActive();
+        } else {
+            flashIndicator.setBackgroundResource(R.drawable.indicator_off_modern);
+            txtSignalState.setText("SIGNAL CAPTURED");
+            txtSignalState.setTextColor(0xFF8C7CF2);
+            signalPanel.setStrokeColor(0xFF263145);
+            animateWaveformIdle();
+        }
+
+        if (cameraManager != null && cameraId != null) {
+            try { cameraManager.setTorchMode(cameraId, active); } catch (Exception ignored) {}
+        }
     }
 
     private void generateQuestion() {

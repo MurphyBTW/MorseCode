@@ -201,78 +201,126 @@ public class QuizActivity extends AppCompatActivity {
     }
 
     private void playMorse(String code) {
-        txtMorseDisplay.setText(""); // reset
-        long delay = 0;
+        handler.removeCallbacksAndMessages(null);
+        stopSignal();
+        txtMorseDisplay.setText("");
 
+        if (code == null || code.trim().isEmpty()) return;
+
+        byte[] audioData = buildMorseAudio(code);
+        if (audioData.length == 0) return;
+
+        try {
+            audioTrack = new AudioTrack(
+                    AudioManager.STREAM_MUSIC,
+                    44100,
+                    AudioFormat.CHANNEL_OUT_MONO,
+                    AudioFormat.ENCODING_PCM_16BIT,
+                    audioData.length,
+                    AudioTrack.MODE_STATIC
+            );
+            audioTrack.write(audioData, 0, audioData.length);
+            audioTrack.play();
+        } catch (Exception e) {
+            releaseAudioTrack();
+            return;
+        }
+
+        long delay = 0;
         for (char c : code.toCharArray()) {
             if (c == '.' || c == '-') {
-                char finalC = c;
-                int duration = (c == '.' ? unitMs : unitMs * 3);
-
+                final char mark = c;
+                int duration = c == '.' ? unitMs : unitMs * 3;
                 handler.postDelayed(() -> {
-                    txtMorseDisplay.append(String.valueOf(finalC)); // 🔥 SHOW DOT/DASH
-                    startSignal();
+                    txtMorseDisplay.append(String.valueOf(mark));
+                    setSignalVisual(true);
                 }, delay);
-
-                handler.postDelayed(this::stopSignal, delay + duration);
-
+                handler.postDelayed(() -> setSignalVisual(false), delay + duration);
                 delay += duration + unitMs;
             } else if (c == ' ') {
-                delay += unitMs * 2;
-                handler.postDelayed(() -> txtMorseDisplay.append(" "), delay);
+                final long spaceDelay = delay;
+                handler.postDelayed(() -> txtMorseDisplay.append(" "), spaceDelay);
+                delay += unitMs * 2L;
             }
+        }
+
+        handler.postDelayed(() -> {
+            setSignalVisual(false);
+            releaseAudioTrack();
+        }, delay + 80L);
+    }
+
+    private byte[] buildMorseAudio(String code) {
+        final int sampleRate = 44100;
+        int totalSamples = 0;
+        for (char c : code.toCharArray()) {
+            if (c == '.') totalSamples += msToSamples(unitMs * 2, sampleRate);
+            else if (c == '-') totalSamples += msToSamples(unitMs * 4, sampleRate);
+            else if (c == ' ') totalSamples += msToSamples(unitMs * 2, sampleRate);
+        }
+        totalSamples += msToSamples(30, sampleRate);
+
+        short[] pcm = new short[Math.max(1, totalSamples)];
+        int position = 0;
+        for (char c : code.toCharArray()) {
+            if (c == '.' || c == '-') {
+                int toneMs = c == '.' ? unitMs : unitMs * 3;
+                int toneSamples = msToSamples(toneMs, sampleRate);
+                writeSmoothTone(pcm, position, toneSamples, sampleRate);
+                position += toneSamples + msToSamples(unitMs, sampleRate);
+            } else if (c == ' ') {
+                position += msToSamples(unitMs * 2, sampleRate);
+            }
+        }
+
+        byte[] data = new byte[pcm.length * 2];
+        int index = 0;
+        for (short value : pcm) {
+            data[index++] = (byte) (value & 0xFF);
+            data[index++] = (byte) ((value >> 8) & 0xFF);
+        }
+        return data;
+    }
+
+    private int msToSamples(int ms, int sampleRate) {
+        return Math.max(0, (int) Math.round(sampleRate * (ms / 1000.0)));
+    }
+
+    private void writeSmoothTone(short[] buffer, int start, int length, int sampleRate) {
+        int safeFrequency = Math.max(100, frequency);
+        int fadeSamples = Math.min(msToSamples(5, sampleRate), Math.max(1, length / 2));
+        double phaseStep = 2.0 * Math.PI * safeFrequency / sampleRate;
+        for (int i = 0; i < length && start + i < buffer.length; i++) {
+            double envelope = 1.0;
+            if (i < fadeSamples) envelope = (double) i / fadeSamples;
+            else if (i >= length - fadeSamples) envelope = (double) (length - i - 1) / fadeSamples;
+            envelope = Math.max(0.0, Math.min(1.0, envelope));
+            buffer[start + i] = (short) (Math.sin(phaseStep * i) * 32767.0 * volume * envelope);
+        }
+    }
+
+    private void setSignalVisual(boolean active) {
+        if (cameraManager != null && cameraId != null) {
+            try { cameraManager.setTorchMode(cameraId, active); } catch (Exception ignored) {}
+        }
+        flashIndicator.setBackgroundResource(active ? R.drawable.indicator_on : R.drawable.indicator_off);
+    }
+
+    private void releaseAudioTrack() {
+        if (audioTrack != null) {
+            try { audioTrack.stop(); } catch (Exception ignored) {}
+            try { audioTrack.release(); } catch (Exception ignored) {}
+            audioTrack = null;
         }
     }
 
     private void startSignal() {
-        stopSignal();
-
-        int sampleRate = 44100;
-        double period = (double) sampleRate / frequency;
-        int numSamples = (int) (Math.round(period) * 50);
-        if (numSamples == 0) numSamples = 441;
-
-        double[] sample = new double[numSamples];
-        byte[] generatedSnd = new byte[2 * numSamples];
-
-        for (int i = 0; i < numSamples; ++i) {
-            sample[i] = Math.sin(2 * Math.PI * i / period);
-        }
-
-        int idx = 0;
-        for (double dVal : sample) {
-            short val = (short) (dVal * 32767 * volume);
-            generatedSnd[idx++] = (byte) (val & 0x00ff);
-            generatedSnd[idx++] = (byte) ((val & 0xff00) >>> 8);
-        }
-
-        audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
-                sampleRate, AudioFormat.CHANNEL_OUT_MONO,
-                AudioFormat.ENCODING_PCM_16BIT, generatedSnd.length,
-                AudioTrack.MODE_STATIC);
-        audioTrack.write(generatedSnd, 0, generatedSnd.length);
-        audioTrack.setLoopPoints(0, numSamples, -1);
-        audioTrack.play();
-
-        try {
-            cameraManager.setTorchMode(cameraId, true);
-        } catch (Exception ignored) {}
-
-        flashIndicator.setBackgroundResource(R.drawable.indicator_on);
+        setSignalVisual(true);
     }
 
     private void stopSignal() {
-        if (audioTrack != null) {
-            audioTrack.stop();
-            audioTrack.release();
-            audioTrack = null;
-        }
-
-        try {
-            cameraManager.setTorchMode(cameraId, false);
-        } catch (Exception ignored) {}
-
-        flashIndicator.setBackgroundResource(R.drawable.indicator_off);
+        releaseAudioTrack();
+        setSignalVisual(false);
     }
 
     @Override
