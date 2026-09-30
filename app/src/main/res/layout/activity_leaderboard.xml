@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -22,6 +23,8 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="20dp">
+
+            <!-- HEADER -->
 
             <TextView
                 android:layout_width="wrap_content"
@@ -49,7 +52,8 @@
                 android:textColor="#91A0B5"
                 android:textSize="14sp"/>
 
-            <!-- Player rank card -->
+            <!-- CURRENT RANK -->
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -107,6 +111,7 @@
                             android:text="Signal Architect"
                             android:textColor="#91A0B5"
                             android:textSize="13sp"/>
+
                     </LinearLayout>
 
                     <LinearLayout
@@ -130,11 +135,15 @@
                             android:textColor="#FFC45C"
                             android:textSize="25sp"
                             android:textStyle="bold"/>
+
                     </LinearLayout>
+
                 </LinearLayout>
+
             </LinearLayout>
 
-            <!-- Stats -->
+            <!-- MATCH RECORD -->
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -151,6 +160,8 @@
                 android:layout_marginTop="12dp"
                 android:columnCount="2"
                 android:useDefaultMargins="false">
+
+                <!-- WINS -->
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -177,7 +188,10 @@
                         android:text="WINS"
                         android:textColor="#91A0B5"
                         android:textSize="11sp"/>
+
                 </LinearLayout>
+
+                <!-- LOSSES -->
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -204,7 +218,10 @@
                         android:text="LOSSES"
                         android:textColor="#91A0B5"
                         android:textSize="11sp"/>
+
                 </LinearLayout>
+
+                <!-- WIN RATE -->
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -230,7 +247,10 @@
                         android:text="WIN RATE"
                         android:textColor="#91A0B5"
                         android:textSize="11sp"/>
+
                 </LinearLayout>
+
+                <!-- CURRENT STREAK -->
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -256,10 +276,13 @@
                         android:text="CURRENT STREAK"
                         android:textColor="#91A0B5"
                         android:textSize="11sp"/>
+
                 </LinearLayout>
+
             </GridLayout>
 
-            <!-- Personal records -->
+            <!-- PERSONAL RECORDS -->
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -318,55 +341,149 @@
                     android:textColor="#FFF4DF"
                     android:textSize="17sp"
                     android:textStyle="bold"/>
+
             </LinearLayout>
 
-            <!-- Leaderboard preview -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="26dp"
-                android:text="LEADERBOARD"
-                android:textColor="#FFC45C"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:letterSpacing="0.10"/>
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="Local preview only. Online rankings will be connected to the database later."
-                android:textColor="#91A0B5"
-                android:textSize="12sp"/>
+            <!-- ====================================== -->
+            <!-- TOP 10 LEADERBOARD -->
+            <!-- ====================================== -->
 
             <LinearLayout
+                android:id="@+id/leaderboardHeader"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:background="#1A1C2B"
+                android:layout_marginTop="26dp"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="LEADERBOARD"
+                        android:textColor="#FFC45C"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.10"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Top 10 players ranked by MMR"
+                        android:textColor="#91A0B5"
+                        android:textSize="12sp"/>
+
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/txtLeaderboardArrow"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:gravity="center"
+                    android:text="▼"
+                    android:textColor="#FFC45C"
+                    android:textSize="18sp"/>
+
+            </LinearLayout>
+
+            <!-- COLLAPSIBLE CONTENT -->
+
+            <LinearLayout
+                android:id="@+id/leaderboardContent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:visibility="gone">
+
+                <!-- COLUMN HEADER -->
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="42dp"
+                    android:background="#202235"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp">
+
+                    <TextView
+                        android:layout_width="38dp"
+                        android:layout_height="wrap_content"
+                        android:text="#"
+                        android:textColor="#91A0B5"
+                        android:textSize="11sp"
+                        android:textStyle="bold"/>
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="PLAYER"
+                        android:textColor="#91A0B5"
+                        android:textSize="11sp"
+                        android:textStyle="bold"/>
+
+                    <TextView
+                        android:layout_width="72dp"
+                        android:layout_height="wrap_content"
+                        android:gravity="end"
+                        android:text="MMR"
+                        android:textColor="#91A0B5"
+                        android:textSize="11sp"
+                        android:textStyle="bold"/>
+
+                    <TextView
+                        android:layout_width="70dp"
+                        android:layout_height="wrap_content"
+                        android:gravity="end"
+                        android:text="WR"
+                        android:textColor="#91A0B5"
+                        android:textSize="11sp"
+                        android:textStyle="bold"/>
+
+                </LinearLayout>
+
+                <!-- STATUS -->
 
                 <TextView
+                    android:id="@+id/txtLeaderboardStatus"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="—   No online players yet"
-                    android:textColor="#FFF4DF"
-                    android:textSize="14sp"/>
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Your account ranking will appear here once connected."
+                    android:background="#1A1C2B"
+                    android:gravity="center"
+                    android:padding="20dp"
+                    android:text="Tap to load leaderboard"
                     android:textColor="#91A0B5"
                     android:textSize="12sp"/>
+
+                <!-- DYNAMIC PLAYER ROWS GO HERE -->
+
+                <LinearLayout
+                    android:id="@+id/leaderboardRows"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"/>
+
             </LinearLayout>
 
         </LinearLayout>
+
     </ScrollView>
 
-    <!-- Bottom navigation -->
+    <!-- BOTTOM NAVIGATION -->
+
     <LinearLayout
         android:id="@+id/bottomNavigation"
         android:layout_width="0dp"
@@ -432,6 +549,7 @@
             android:text="⚙&#10;Settings"
             android:textColor="#B7B7C8"
             android:textSize="12sp"/>
+
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
