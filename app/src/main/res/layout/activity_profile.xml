@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -23,6 +24,10 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="22dp">
+
+            <!-- =============================== -->
+            <!-- HEADER -->
+            <!-- =============================== -->
 
             <TextView
                 android:layout_width="wrap_content"
@@ -49,6 +54,10 @@
                 android:text="Manage your MorseConnect account information."
                 android:textColor="#91A0B5"
                 android:textSize="14sp" />
+
+            <!-- =============================== -->
+            <!-- PROFILE CARD -->
+            <!-- =============================== -->
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -115,7 +124,12 @@
                     android:textAllCaps="false"
                     android:textColor="#241507"
                     android:textStyle="bold" />
+
             </LinearLayout>
+
+            <!-- =============================== -->
+            <!-- ACCOUNT DETAILS -->
+            <!-- =============================== -->
 
             <TextView
                 android:layout_width="wrap_content"
@@ -135,6 +149,33 @@
                 android:padding="18dp"
                 android:background="#1A1C2B">
 
+                <!-- EMAIL -->
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Email"
+                    android:textColor="#91A0B5"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/txtEmail"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:text="Not available"
+                    android:textColor="#FFF4DF"
+                    android:textSize="15sp" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="16dp"
+                    android:background="#343748" />
+
+                <!-- USER ID -->
+
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -147,7 +188,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="5dp"
-                    android:text="Not set"
+                    android:text="Not available"
                     android:textColor="#FFF4DF"
                     android:textSize="15sp" />
 
@@ -157,6 +198,8 @@
                     android:layout_marginTop="16dp"
                     android:layout_marginBottom="16dp"
                     android:background="#343748" />
+
+                <!-- MEMBER SINCE -->
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -173,19 +216,30 @@
                     android:text="Not available"
                     android:textColor="#FFF4DF"
                     android:textSize="15sp" />
+
             </LinearLayout>
+
+            <!-- =============================== -->
+            <!-- NOTE -->
+            <!-- =============================== -->
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="18dp"
+                android:layout_marginBottom="18dp"
                 android:gravity="center"
                 android:text="Your competitive stats are in Leaderboards."
                 android:textColor="#91A0B5"
                 android:textSize="12sp" />
 
         </LinearLayout>
+
     </ScrollView>
+
+    <!-- ======================================= -->
+    <!-- BOTTOM NAVIGATION -->
+    <!-- ======================================= -->
 
     <LinearLayout
         android:id="@+id/bottomNavigation"
@@ -252,6 +306,7 @@
             android:text="⚙&#10;Settings"
             android:textColor="#B7B7C8"
             android:textSize="12sp" />
+
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

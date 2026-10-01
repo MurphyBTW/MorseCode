@@ -11,6 +11,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonObjectRequest;
@@ -22,7 +23,7 @@ import org.json.JSONObject;
 public class LoginActivity extends AppCompatActivity {
 
     EditText edtUser, edtPass;
-    Button btnLogin, btnSignup;
+    Button btnLogin, btnSignup, btnOffline;
     TextView txtForgot;
 
     // ------------------------------------------------
@@ -37,10 +38,17 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
+        // ------------------------------------------------
+        // VIEWS
+        // ------------------------------------------------
+
         edtUser = findViewById(R.id.edtUser);
         edtPass = findViewById(R.id.edtPass);
+
         btnLogin = findViewById(R.id.btnLogin);
         btnSignup = findViewById(R.id.btnSignup);
+        btnOffline = findViewById(R.id.btnOffline);
+
         txtForgot = findViewById(R.id.txtForgot);
 
         // ------------------------------------------------
@@ -93,6 +101,78 @@ public class LoginActivity extends AppCompatActivity {
 
             startActivity(intent);
         });
+
+        // ------------------------------------------------
+        // CONTINUE OFFLINE
+        // ------------------------------------------------
+
+        btnOffline.setOnClickListener(
+                v -> enterOfflineMode()
+        );
+    }
+
+    // ------------------------------------------------
+    // ENTER OFFLINE MODE
+    // ------------------------------------------------
+
+    private void enterOfflineMode() {
+
+        SharedPreferences sessionPrefs =
+                getSharedPreferences(
+                        SESSION_PREFS,
+                        MODE_PRIVATE
+                );
+
+        /*
+         * Offline mode is NOT a real authenticated session.
+         *
+         * Clear any previous account/session information
+         * before entering offline mode.
+         */
+        sessionPrefs
+                .edit()
+                .clear()
+
+                .putBoolean(
+                        "offline_mode",
+                        true
+                )
+
+                .putBoolean(
+                        "logged_in",
+                        false
+                )
+
+                .apply();
+
+        Log.d(
+                "OFFLINE_MODE",
+                "Entering MorseConnect offline mode"
+        );
+
+        Intent intent =
+                new Intent(
+                        LoginActivity.this,
+                        MainActivity.class
+                );
+
+        intent.putExtra(
+                "offline_mode",
+                true
+        );
+
+        /*
+         * Prevent returning to LoginActivity by pressing
+         * Back while using Offline Mode.
+         */
+        intent.addFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK |
+                        Intent.FLAG_ACTIVITY_CLEAR_TASK
+        );
+
+        startActivity(intent);
+
+        finish();
     }
 
     // ------------------------------------------------
@@ -355,8 +435,13 @@ public class LoginActivity extends AppCompatActivity {
                                                 MODE_PRIVATE
                                         );
 
+                                /*
+                                 * Clear any old offline/session state first,
+                                 * then save the new authenticated session.
+                                 */
                                 sessionPrefs
                                         .edit()
+                                        .clear()
 
                                         .putString(
                                                 "session_token",
@@ -408,6 +493,11 @@ public class LoginActivity extends AppCompatActivity {
                                                 true
                                         )
 
+                                        .putBoolean(
+                                                "offline_mode",
+                                                false
+                                        )
+
                                         .apply();
 
                                 Log.d(
@@ -437,6 +527,20 @@ public class LoginActivity extends AppCompatActivity {
                                 intent.putExtra(
                                         "user_id",
                                         String.valueOf(userId)
+                                );
+
+                                intent.putExtra(
+                                        "offline_mode",
+                                        false
+                                );
+
+                                /*
+                                 * Remove LoginActivity from the navigation
+                                 * stack after a successful login.
+                                 */
+                                intent.addFlags(
+                                        Intent.FLAG_ACTIVITY_NEW_TASK |
+                                                Intent.FLAG_ACTIVITY_CLEAR_TASK
                                 );
 
                                 startActivity(intent);
@@ -691,6 +795,18 @@ public class LoginActivity extends AppCompatActivity {
                 };
 
         // ------------------------------------------------
+        // NO AUTOMATIC RETRY
+        // ------------------------------------------------
+
+        request.setRetryPolicy(
+                new DefaultRetryPolicy(
+                        15000,
+                        0,
+                        1.0f
+                )
+        );
+
+        // ------------------------------------------------
         // SEND REQUEST
         // ------------------------------------------------
 
@@ -699,4 +815,4 @@ public class LoginActivity extends AppCompatActivity {
 
         queue.add(request);
     }
-}
+}    

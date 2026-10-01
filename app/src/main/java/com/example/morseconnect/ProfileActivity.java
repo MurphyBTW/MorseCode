@@ -1,22 +1,33 @@
 package com.example.morseconnect;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
+import android.text.InputType;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -26,23 +37,25 @@ import java.util.TimeZone;
 
 public class ProfileActivity extends AppCompatActivity {
 
+    private static final String TAG = "PROFILE";
+
+    private static final String SESSION_PREFS =
+            "morseconnect_session";
+
     private TextView txtAvatar;
     private TextView txtDisplayName;
     private TextView txtUsername;
+    private TextView txtEmail;
     private TextView txtUserId;
     private TextView txtJoinDate;
 
     private Button btnEditProfile;
 
     private SharedPreferences sessionPrefs;
-
     private RequestQueue requestQueue;
 
-    private static final String SESSION_PREFS =
-            "morseconnect_session";
-
-    private static final String TAG =
-            "PROFILE";
+    private boolean profileRequestRunning = false;
+    private boolean updateRequestRunning = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,9 +63,9 @@ public class ProfileActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_profile);
 
-        // ------------------------------------------------
-        // SESSION
-        // ------------------------------------------------
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().hide();
+        }
 
         sessionPrefs =
                 getSharedPreferences(
@@ -60,90 +73,92 @@ public class ProfileActivity extends AppCompatActivity {
                         MODE_PRIVATE
                 );
 
-        // ------------------------------------------------
-        // VOLLEY
-        // ------------------------------------------------
-
         requestQueue =
                 Volley.newRequestQueue(this);
 
-        // ------------------------------------------------
-        // VIEWS
-        // ------------------------------------------------
-
-        txtAvatar =
-                findViewById(R.id.txtAvatar);
-
-        txtDisplayName =
-                findViewById(R.id.txtDisplayName);
-
-        txtUsername =
-                findViewById(R.id.txtUsername);
-
-        txtUserId =
-                findViewById(R.id.txtUserId);
-
-        txtJoinDate =
-                findViewById(R.id.txtJoinDate);
-
-        btnEditProfile =
-                findViewById(R.id.btnEditProfile);
-
-        // ------------------------------------------------
-        // SHOW CACHED PROFILE FIRST
-        // ------------------------------------------------
+        bindViews();
+        setupNavigation();
 
         loadCachedProfile();
-
-        // ------------------------------------------------
-        // LOAD CURRENT PROFILE FROM SERVER
-        // ------------------------------------------------
-
         loadProfileFromServer();
 
-        // ------------------------------------------------
-        // EDIT PROFILE
-        // ------------------------------------------------
+        btnEditProfile.setOnClickListener(
+                v -> showEditProfileDialog()
+        );
+    }
 
-        btnEditProfile.setOnClickListener(v -> {
+    private void bindViews() {
 
-            Toast.makeText(
-                    ProfileActivity.this,
-                    "Profile editing will be connected to your account next.",
-                    Toast.LENGTH_SHORT
-            ).show();
+        txtAvatar =
+                findViewById(
+                        R.id.txtAvatar
+                );
 
-        });
+        txtDisplayName =
+                findViewById(
+                        R.id.txtDisplayName
+                );
 
-        // ------------------------------------------------
-        // BOTTOM NAVIGATION
-        // ------------------------------------------------
+        txtUsername =
+                findViewById(
+                        R.id.txtUsername
+                );
+
+        txtEmail =
+                findViewById(
+                        R.id.txtEmail
+                );
+
+        txtUserId =
+                findViewById(
+                        R.id.txtUserId
+                );
+
+        txtJoinDate =
+                findViewById(
+                        R.id.txtJoinDate
+                );
+
+        btnEditProfile =
+                findViewById(
+                        R.id.btnEditProfile
+                );
+    }
+
+    private void setupNavigation() {
 
         findViewById(R.id.btnHome)
-                .setOnClickListener(v ->
-                        openActivity(
+                .setOnClickListener(
+                        v -> openActivity(
                                 MainActivity.class
                         )
                 );
 
+        findViewById(R.id.btnProfile)
+                .setOnClickListener(
+                        v -> {
+                            // Already on Profile.
+                        }
+                );
+
         findViewById(R.id.btnLeaderboard)
-                .setOnClickListener(v ->
-                        openActivityByName(
+                .setOnClickListener(
+                        v -> openActivityByName(
                                 "LeaderboardActivity"
                         )
                 );
 
         findViewById(R.id.btnSettingsTab)
-                .setOnClickListener(v ->
-                        openActivity(
+                .setOnClickListener(
+                        v -> openActivity(
                                 SettingsActivity.class
                         )
                 );
     }
 
-    // ------------------------------------------------
-    // LOAD CACHED PROFILE
-    // ------------------------------------------------
+    // =========================================================
+    // CACHED PROFILE
+    // =========================================================
 
     private void loadCachedProfile() {
 
@@ -171,6 +186,12 @@ public class ProfileActivity extends AppCompatActivity {
                         ""
                 );
 
+        String email =
+                sessionPrefs.getString(
+                        "email",
+                        ""
+                );
+
         String createdAt =
                 sessionPrefs.getString(
                         "created_at",
@@ -182,24 +203,25 @@ public class ProfileActivity extends AppCompatActivity {
                 firstName,
                 lastName,
                 username,
+                email,
                 createdAt
         );
     }
 
-    // ------------------------------------------------
-    // LOAD PROFILE FROM SUPABASE
-    // ------------------------------------------------
+    // =========================================================
+    // LOAD PROFILE FROM SERVER
+    // =========================================================
 
     private void loadProfileFromServer() {
 
-        String sessionToken =
-                sessionPrefs.getString(
-                        "session_token",
-                        ""
-                );
+        if (profileRequestRunning) {
+            return;
+        }
 
-        if (sessionToken == null ||
-                sessionToken.trim().isEmpty()) {
+        String sessionToken =
+                getSessionToken();
+
+        if (sessionToken.isEmpty()) {
 
             Log.e(
                     TAG,
@@ -213,14 +235,11 @@ public class ProfileActivity extends AppCompatActivity {
             return;
         }
 
+        profileRequestRunning = true;
+
         String url =
                 ApiConfig.BASE_URL +
                         "profile";
-
-        Log.d(
-                TAG,
-                "Loading profile"
-        );
 
         JsonObjectRequest request =
                 new JsonObjectRequest(
@@ -230,10 +249,8 @@ public class ProfileActivity extends AppCompatActivity {
 
                         response -> {
 
-                            Log.d(
-                                    TAG,
-                                    "Profile response received"
-                            );
+                            profileRequestRunning =
+                                    false;
 
                             handleProfileResponse(
                                     response
@@ -242,13 +259,19 @@ public class ProfileActivity extends AppCompatActivity {
 
                         error -> {
 
+                            profileRequestRunning =
+                                    false;
+
                             Log.e(
                                     TAG,
                                     "Profile request failed",
                                     error
                             );
 
-                            if (error.networkResponse == null) {
+                            if (
+                                    error.networkResponse ==
+                                            null
+                            ) {
 
                                 Toast.makeText(
                                         ProfileActivity.this,
@@ -260,47 +283,20 @@ public class ProfileActivity extends AppCompatActivity {
                             }
 
                             int statusCode =
-                                    error.networkResponse.statusCode;
+                                    error
+                                            .networkResponse
+                                            .statusCode;
 
-                            String responseBody =
-                                    "";
+                            String message =
+                                    getErrorMessage(
+                                            error.networkResponse.data,
+                                            "Unable to load profile"
+                                    );
 
-                            if (error.networkResponse.data != null) {
-
-                                responseBody =
-                                        new String(
-                                                error.networkResponse.data
-                                        );
-                            }
-
-                            Log.e(
-                                    TAG,
-                                    "HTTP " +
-                                            statusCode +
-                                            ": " +
-                                            responseBody
-                            );
-
-                            if (statusCode == 401) {
-
-                                String message =
-                                        "Your login session is no longer valid.";
-
-                                try {
-
-                                    JSONObject errorJson =
-                                            new JSONObject(
-                                                    responseBody
-                                            );
-
-                                    message =
-                                            errorJson.optString(
-                                                    "message",
-                                                    message
-                                            );
-
-                                } catch (Exception ignored) {
-                                }
+                            if (
+                                    statusCode ==
+                                            401
+                            ) {
 
                                 handleInvalidSession(
                                         message
@@ -310,7 +306,7 @@ public class ProfileActivity extends AppCompatActivity {
 
                                 Toast.makeText(
                                         ProfileActivity.this,
-                                        "Unable to load profile",
+                                        message,
                                         Toast.LENGTH_SHORT
                                 ).show();
                             }
@@ -318,45 +314,23 @@ public class ProfileActivity extends AppCompatActivity {
                 ) {
 
                     @Override
-                    public Map<String, String> getHeaders() {
+                    public Map<String, String>
+                    getHeaders() {
 
-                        Map<String, String> headers =
-                                new HashMap<>();
-
-                        String sessionToken =
-                                sessionPrefs.getString(
-                                        "session_token",
-                                        ""
-                                );
-
-                        headers.put(
-                                "Content-Type",
-                                "application/json"
-                        );
-
-                        headers.put(
-                                "apikey",
-                                ApiConfig.SUPABASE_ANON_KEY
-                        );
-
-                        headers.put(
-                                "Authorization",
-                                "Bearer " +
-                                        sessionToken
-                        );
-
-                        return headers;
+                        return buildHeaders();
                     }
                 };
 
-        requestQueue.add(
-                request
+        request.setRetryPolicy(
+                new DefaultRetryPolicy(
+                        15000,
+                        0,
+                        1.0f
+                )
         );
-    }
 
-    // ------------------------------------------------
-    // HANDLE PROFILE RESPONSE
-    // ------------------------------------------------
+        requestQueue.add(request);
+    }
 
     private void handleProfileResponse(
             JSONObject response
@@ -372,15 +346,12 @@ public class ProfileActivity extends AppCompatActivity {
 
             if (!success) {
 
-                String message =
+                Toast.makeText(
+                        this,
                         response.optString(
                                 "message",
                                 "Unable to load profile"
-                        );
-
-                Toast.makeText(
-                        this,
-                        message,
+                        ),
                         Toast.LENGTH_SHORT
                 ).show();
 
@@ -444,10 +415,6 @@ public class ProfileActivity extends AppCompatActivity {
                             "created_at",
                             ""
                     );
-
-            // ------------------------------------------------
-            // PLAYER STATS
-            // ------------------------------------------------
 
             JSONObject stats =
                     response.optJSONObject(
@@ -513,10 +480,6 @@ public class ProfileActivity extends AppCompatActivity {
                                 0
                         );
             }
-
-            // ------------------------------------------------
-            // UPDATE LOCAL SESSION CACHE
-            // ------------------------------------------------
 
             sessionPrefs
                     .edit()
@@ -598,15 +561,12 @@ public class ProfileActivity extends AppCompatActivity {
 
                     .apply();
 
-            // ------------------------------------------------
-            // UPDATE SCREEN
-            // ------------------------------------------------
-
             updateProfileUI(
                     userId,
                     firstName,
                     lastName,
                     username,
+                    email,
                     createdAt
             );
 
@@ -619,7 +579,7 @@ public class ProfileActivity extends AppCompatActivity {
 
             Log.e(
                     TAG,
-                    "Profile response parsing error",
+                    "Profile parsing error",
                     e
             );
 
@@ -631,15 +591,782 @@ public class ProfileActivity extends AppCompatActivity {
         }
     }
 
-    // ------------------------------------------------
-    // UPDATE PROFILE UI
-    // ------------------------------------------------
+    // =========================================================
+    // EDIT PROFILE DIALOG
+    // =========================================================
+
+    private void showEditProfileDialog() {
+
+        if (updateRequestRunning) {
+            return;
+        }
+
+        String firstName =
+                sessionPrefs.getString(
+                        "first_name",
+                        ""
+                );
+
+        String lastName =
+                sessionPrefs.getString(
+                        "last_name",
+                        ""
+                );
+
+        String email =
+                sessionPrefs.getString(
+                        "email",
+                        ""
+                );
+
+        LinearLayout container =
+                createDialogContainer();
+
+        TextView description =
+                createDialogDescription(
+                        "Update your account information. A verification code will be sent to the email address below before any changes are saved."
+                );
+
+        EditText inputFirstName =
+                createEditText(
+                        "First name",
+                        firstName,
+                        InputType.TYPE_CLASS_TEXT |
+                                InputType.TYPE_TEXT_FLAG_CAP_WORDS
+                );
+
+        EditText inputLastName =
+                createEditText(
+                        "Last name",
+                        lastName,
+                        InputType.TYPE_CLASS_TEXT |
+                                InputType.TYPE_TEXT_FLAG_CAP_WORDS
+                );
+
+        EditText inputEmail =
+                createEditText(
+                        "Email address",
+                        email,
+                        InputType.TYPE_CLASS_TEXT |
+                                InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
+                );
+
+        container.addView(
+                description
+        );
+
+        container.addView(
+                inputFirstName
+        );
+
+        container.addView(
+                inputLastName
+        );
+
+        container.addView(
+                inputEmail
+        );
+
+        AlertDialog dialog =
+                new AlertDialog.Builder(this)
+                        .setTitle(
+                                "Edit Profile"
+                        )
+                        .setView(
+                                container
+                        )
+                        .setNegativeButton(
+                                "CANCEL",
+                                null
+                        )
+                        .setPositiveButton(
+                                "SEND OTP",
+                                null
+                        )
+                        .create();
+
+        dialog.setOnShowListener(
+                ignored -> {
+
+                    styleDialog(
+                            dialog
+                    );
+
+                    dialog
+                            .getButton(
+                                    AlertDialog.BUTTON_POSITIVE
+                            )
+                            .setOnClickListener(
+                                    v -> {
+
+                                        String newFirstName =
+                                                inputFirstName
+                                                        .getText()
+                                                        .toString()
+                                                        .trim();
+
+                                        String newLastName =
+                                                inputLastName
+                                                        .getText()
+                                                        .toString()
+                                                        .trim();
+
+                                        String newEmail =
+                                                inputEmail
+                                                        .getText()
+                                                        .toString()
+                                                        .trim()
+                                                        .toLowerCase(
+                                                                Locale.US
+                                                        );
+
+                                        if (
+                                                newFirstName
+                                                        .isEmpty()
+                                        ) {
+
+                                            inputFirstName.setError(
+                                                    "First name is required"
+                                            );
+
+                                            return;
+                                        }
+
+                                        if (
+                                                newLastName
+                                                        .isEmpty()
+                                        ) {
+
+                                            inputLastName.setError(
+                                                    "Last name is required"
+                                            );
+
+                                            return;
+                                        }
+
+                                        if (
+                                                newFirstName.length() >
+                                                        50
+                                        ) {
+
+                                            inputFirstName.setError(
+                                                    "Maximum 50 characters"
+                                            );
+
+                                            return;
+                                        }
+
+                                        if (
+                                                newLastName.length() >
+                                                        50
+                                        ) {
+
+                                            inputLastName.setError(
+                                                    "Maximum 50 characters"
+                                            );
+
+                                            return;
+                                        }
+
+                                        if (
+                                                !android.util.Patterns
+                                                        .EMAIL_ADDRESS
+                                                        .matcher(
+                                                                newEmail
+                                                        )
+                                                        .matches()
+                                        ) {
+
+                                            inputEmail.setError(
+                                                    "Enter a valid email"
+                                            );
+
+                                            return;
+                                        }
+
+                                        requestProfileOtp(
+                                                dialog,
+                                                newFirstName,
+                                                newLastName,
+                                                newEmail
+                                        );
+                                    }
+                            );
+                }
+        );
+
+        dialog.show();
+    }
+
+    // =========================================================
+    // REQUEST OTP
+    // =========================================================
+
+    private void requestProfileOtp(
+            AlertDialog editDialog,
+            String firstName,
+            String lastName,
+            String email
+    ) {
+
+        if (updateRequestRunning) {
+            return;
+        }
+
+        String sessionToken =
+                getSessionToken();
+
+        if (sessionToken.isEmpty()) {
+
+            handleInvalidSession(
+                    "Please log in again."
+            );
+
+            return;
+        }
+
+        updateRequestRunning = true;
+
+        Button positiveButton =
+                editDialog.getButton(
+                        AlertDialog.BUTTON_POSITIVE
+                );
+
+        positiveButton.setEnabled(false);
+        positiveButton.setText(
+                "SENDING..."
+        );
+
+        JSONObject body =
+                new JSONObject();
+
+        try {
+
+            body.put(
+                    "action",
+                    "request_otp"
+            );
+
+            body.put(
+                    "first_name",
+                    firstName
+            );
+
+            body.put(
+                    "last_name",
+                    lastName
+            );
+
+            body.put(
+                    "email",
+                    email
+            );
+
+        } catch (JSONException e) {
+
+            updateRequestRunning = false;
+
+            positiveButton.setEnabled(true);
+            positiveButton.setText(
+                    "SEND OTP"
+            );
+
+            Toast.makeText(
+                    this,
+                    "Unable to prepare profile update.",
+                    Toast.LENGTH_LONG
+            ).show();
+
+            return;
+        }
+
+        String url =
+                ApiConfig.BASE_URL +
+                        "profile-update";
+
+        JsonObjectRequest request =
+                new JsonObjectRequest(
+                        Request.Method.POST,
+                        url,
+                        body,
+
+                        response -> {
+
+                            updateRequestRunning =
+                                    false;
+
+                            positiveButton.setEnabled(
+                                    true
+                            );
+
+                            positiveButton.setText(
+                                    "SEND OTP"
+                            );
+
+                            boolean success =
+                                    response.optBoolean(
+                                            "success",
+                                            false
+                                    );
+
+                            if (!success) {
+
+                                Toast.makeText(
+                                        ProfileActivity.this,
+                                        response.optString(
+                                                "message",
+                                                "Unable to send verification code."
+                                        ),
+                                        Toast.LENGTH_LONG
+                                ).show();
+
+                                return;
+                            }
+
+                            editDialog.dismiss();
+
+                            Toast.makeText(
+                                    ProfileActivity.this,
+                                    "Verification code sent to " +
+                                            email,
+                                    Toast.LENGTH_LONG
+                            ).show();
+
+                            showOtpDialog(
+                                    email
+                            );
+                        },
+
+                        error -> {
+
+                            updateRequestRunning =
+                                    false;
+
+                            positiveButton.setEnabled(
+                                    true
+                            );
+
+                            positiveButton.setText(
+                                    "SEND OTP"
+                            );
+
+                            handleUpdateError(
+                                    error.networkResponse != null
+                                            ? error.networkResponse.statusCode
+                                            : -1,
+
+                                    error.networkResponse != null
+                                            ? error.networkResponse.data
+                                            : null,
+
+                                    "Unable to send verification code."
+                            );
+                        }
+                ) {
+
+                    @Override
+                    public Map<String, String>
+                    getHeaders() {
+
+                        return buildHeaders();
+                    }
+                };
+
+        request.setRetryPolicy(
+                new DefaultRetryPolicy(
+                        15000,
+                        0,
+                        1.0f
+                )
+        );
+
+        requestQueue.add(request);
+    }
+
+    // =========================================================
+    // OTP DIALOG
+    // =========================================================
+
+    private void showOtpDialog(
+            String email
+    ) {
+
+        LinearLayout container =
+                createDialogContainer();
+
+        TextView description =
+                createDialogDescription(
+                        "Enter the 6-digit verification code sent to:\n\n" +
+                                email +
+                                "\n\nThe code expires in 10 minutes."
+                );
+
+        EditText inputOtp =
+                createEditText(
+                        "6-digit code",
+                        "",
+                        InputType.TYPE_CLASS_NUMBER
+                );
+
+        inputOtp.setGravity(
+                Gravity.CENTER
+        );
+
+        inputOtp.setLetterSpacing(
+                0.25f
+        );
+
+        container.addView(
+                description
+        );
+
+        container.addView(
+                inputOtp
+        );
+
+        AlertDialog dialog =
+                new AlertDialog.Builder(this)
+                        .setTitle(
+                                "Verify Changes"
+                        )
+                        .setView(
+                                container
+                        )
+                        .setNegativeButton(
+                                "CANCEL",
+                                null
+                        )
+                        .setPositiveButton(
+                                "VERIFY",
+                                null
+                        )
+                        .create();
+
+        dialog.setOnShowListener(
+                ignored -> {
+
+                    styleDialog(
+                            dialog
+                    );
+
+                    dialog
+                            .getButton(
+                                    AlertDialog.BUTTON_POSITIVE
+                            )
+                            .setOnClickListener(
+                                    v -> {
+
+                                        String otp =
+                                                inputOtp
+                                                        .getText()
+                                                        .toString()
+                                                        .trim();
+
+                                        if (
+                                                !otp.matches(
+                                                        "\\d{6}"
+                                                )
+                                        ) {
+
+                                            inputOtp.setError(
+                                                    "Enter the 6-digit code"
+                                            );
+
+                                            return;
+                                        }
+
+                                        verifyProfileOtp(
+                                                dialog,
+                                                otp
+                                        );
+                                    }
+                            );
+                }
+        );
+
+        dialog.show();
+    }
+
+    // =========================================================
+    // VERIFY OTP
+    // =========================================================
+
+    private void verifyProfileOtp(
+            AlertDialog otpDialog,
+            String otp
+    ) {
+
+        if (updateRequestRunning) {
+            return;
+        }
+
+        if (
+                getSessionToken()
+                        .isEmpty()
+        ) {
+
+            otpDialog.dismiss();
+
+            handleInvalidSession(
+                    "Please log in again."
+            );
+
+            return;
+        }
+
+        updateRequestRunning = true;
+
+        Button positiveButton =
+                otpDialog.getButton(
+                        AlertDialog.BUTTON_POSITIVE
+                );
+
+        positiveButton.setEnabled(false);
+        positiveButton.setText(
+                "VERIFYING..."
+        );
+
+        JSONObject body =
+                new JSONObject();
+
+        try {
+
+            body.put(
+                    "action",
+                    "verify_otp"
+            );
+
+            body.put(
+                    "otp",
+                    otp
+            );
+
+        } catch (JSONException e) {
+
+            updateRequestRunning = false;
+
+            positiveButton.setEnabled(true);
+            positiveButton.setText(
+                    "VERIFY"
+            );
+
+            return;
+        }
+
+        String url =
+                ApiConfig.BASE_URL +
+                        "profile-update";
+
+        JsonObjectRequest request =
+                new JsonObjectRequest(
+                        Request.Method.POST,
+                        url,
+                        body,
+
+                        response -> {
+
+                            updateRequestRunning =
+                                    false;
+
+                            positiveButton.setEnabled(
+                                    true
+                            );
+
+                            positiveButton.setText(
+                                    "VERIFY"
+                            );
+
+                            boolean success =
+                                    response.optBoolean(
+                                            "success",
+                                            false
+                                    );
+
+                            if (!success) {
+
+                                Toast.makeText(
+                                        ProfileActivity.this,
+                                        response.optString(
+                                                "message",
+                                                "Incorrect verification code."
+                                        ),
+                                        Toast.LENGTH_LONG
+                                ).show();
+
+                                return;
+                            }
+
+                            JSONObject user =
+                                    response.optJSONObject(
+                                            "user"
+                                    );
+
+                            if (user != null) {
+
+                                saveUpdatedUserToCache(
+                                        user
+                                );
+                            }
+
+                            otpDialog.dismiss();
+
+                            Toast.makeText(
+                                    ProfileActivity.this,
+                                    "Profile updated successfully.",
+                                    Toast.LENGTH_LONG
+                            ).show();
+
+                            loadCachedProfile();
+
+                            loadProfileFromServer();
+                        },
+
+                        error -> {
+
+                            updateRequestRunning =
+                                    false;
+
+                            positiveButton.setEnabled(
+                                    true
+                            );
+
+                            positiveButton.setText(
+                                    "VERIFY"
+                            );
+
+                            handleUpdateError(
+                                    error.networkResponse != null
+                                            ? error.networkResponse.statusCode
+                                            : -1,
+
+                                    error.networkResponse != null
+                                            ? error.networkResponse.data
+                                            : null,
+
+                                    "Unable to verify code."
+                            );
+                        }
+                ) {
+
+                    @Override
+                    public Map<String, String>
+                    getHeaders() {
+
+                        return buildHeaders();
+                    }
+                };
+
+        request.setRetryPolicy(
+                new DefaultRetryPolicy(
+                        15000,
+                        0,
+                        1.0f
+                )
+        );
+
+        requestQueue.add(request);
+    }
+
+    private void saveUpdatedUserToCache(
+            JSONObject user
+    ) {
+
+        SharedPreferences.Editor editor =
+                sessionPrefs.edit();
+
+        if (user.has("id")) {
+
+            editor.putLong(
+                    "user_id",
+                    user.optLong(
+                            "id",
+                            sessionPrefs.getLong(
+                                    "user_id",
+                                    -1
+                            )
+                    )
+            );
+        }
+
+        if (user.has("first_name")) {
+
+            editor.putString(
+                    "first_name",
+                    user.optString(
+                            "first_name",
+                            ""
+                    )
+            );
+        }
+
+        if (user.has("last_name")) {
+
+            editor.putString(
+                    "last_name",
+                    user.optString(
+                            "last_name",
+                            ""
+                    )
+            );
+        }
+
+        if (user.has("username")) {
+
+            editor.putString(
+                    "username",
+                    user.optString(
+                            "username",
+                            ""
+                    )
+            );
+        }
+
+        if (user.has("email")) {
+
+            editor.putString(
+                    "email",
+                    user.optString(
+                            "email",
+                            ""
+                    )
+            );
+        }
+
+        if (user.has("role")) {
+
+            editor.putString(
+                    "role",
+                    user.optString(
+                            "role",
+                            "user"
+                    )
+            );
+        }
+
+        if (user.has("created_at")) {
+
+            editor.putString(
+                    "created_at",
+                    user.optString(
+                            "created_at",
+                            ""
+                    )
+            );
+        }
+
+        editor.apply();
+    }
+
+    // =========================================================
+    // PROFILE UI
+    // =========================================================
 
     private void updateProfileUI(
             long userId,
             String firstName,
             String lastName,
             String username,
+            String email,
             String createdAt
     ) {
 
@@ -653,8 +1380,10 @@ public class ProfileActivity extends AppCompatActivity {
                 displayName
         );
 
-        if (username == null ||
-                username.trim().isEmpty()) {
+        if (
+                username == null ||
+                        username.trim().isEmpty()
+        ) {
 
             txtUsername.setText(
                     "@username"
@@ -663,7 +1392,24 @@ public class ProfileActivity extends AppCompatActivity {
         } else {
 
             txtUsername.setText(
-                    "@" + username
+                    "@" +
+                            username
+            );
+        }
+
+        if (
+                email == null ||
+                        email.trim().isEmpty()
+        ) {
+
+            txtEmail.setText(
+                    "Not available"
+            );
+
+        } else {
+
+            txtEmail.setText(
+                    email
             );
         }
 
@@ -688,14 +1434,14 @@ public class ProfileActivity extends AppCompatActivity {
                 )
         );
 
-        // ------------------------------------------------
-        // AVATAR INITIAL
-        // ------------------------------------------------
-
         String initial = "?";
 
-        if (firstName != null &&
-                !firstName.trim().isEmpty()) {
+        if (
+                firstName != null &&
+                        !firstName
+                                .trim()
+                                .isEmpty()
+        ) {
 
             initial =
                     firstName
@@ -710,7 +1456,9 @@ public class ProfileActivity extends AppCompatActivity {
 
         } else if (
                 username != null &&
-                        !username.trim().isEmpty()
+                        !username
+                                .trim()
+                                .isEmpty()
         ) {
 
             initial =
@@ -730,9 +1478,359 @@ public class ProfileActivity extends AppCompatActivity {
         );
     }
 
-    // ------------------------------------------------
-    // BUILD FULL NAME
-    // ------------------------------------------------
+    // =========================================================
+    // DIALOG UI HELPERS
+    // =========================================================
+
+    private LinearLayout createDialogContainer() {
+
+        LinearLayout container =
+                new LinearLayout(this);
+
+        container.setOrientation(
+                LinearLayout.VERTICAL
+        );
+
+        int horizontal =
+                dp(22);
+
+        int vertical =
+                dp(8);
+
+        container.setPadding(
+                horizontal,
+                vertical,
+                horizontal,
+                dp(6)
+        );
+
+        return container;
+    }
+
+    private TextView createDialogDescription(
+            String text
+    ) {
+
+        TextView textView =
+                new TextView(this);
+
+        textView.setText(
+                text
+        );
+
+        textView.setTextColor(
+                Color.parseColor(
+                        "#91A0B5"
+                )
+        );
+
+        textView.setTextSize(
+                13
+        );
+
+        LinearLayout.LayoutParams params =
+                new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                );
+
+        params.setMargins(
+                0,
+                dp(8),
+                0,
+                dp(12)
+        );
+
+        textView.setLayoutParams(
+                params
+        );
+
+        return textView;
+    }
+
+    private EditText createEditText(
+            String hint,
+            String value,
+            int inputType
+    ) {
+
+        EditText editText =
+                new EditText(this);
+
+        editText.setHint(
+                hint
+        );
+
+        editText.setText(
+                value == null
+                        ? ""
+                        : value
+        );
+
+        editText.setInputType(
+                inputType
+        );
+
+        editText.setTextColor(
+                Color.parseColor(
+                        "#FFF4DF"
+                )
+        );
+
+        editText.setHintTextColor(
+                Color.parseColor(
+                        "#78869A"
+                )
+        );
+
+        editText.setSingleLine(
+                true
+        );
+
+        editText.setPadding(
+                dp(14),
+                0,
+                dp(14),
+                0
+        );
+
+        GradientDrawable background =
+                new GradientDrawable();
+
+        background.setColor(
+                Color.parseColor(
+                        "#171927"
+                )
+        );
+
+        background.setStroke(
+                dp(1),
+                Color.parseColor(
+                        "#343748"
+                )
+        );
+
+        background.setCornerRadius(
+                dp(10)
+        );
+
+        editText.setBackground(
+                background
+        );
+
+        LinearLayout.LayoutParams params =
+                new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        dp(54)
+                );
+
+        params.setMargins(
+                0,
+                dp(7),
+                0,
+                dp(7)
+        );
+
+        editText.setLayoutParams(
+                params
+        );
+
+        return editText;
+    }
+
+    private void styleDialog(
+            AlertDialog dialog
+    ) {
+
+        if (
+                dialog.getWindow() !=
+                        null
+        ) {
+
+            GradientDrawable background =
+                    new GradientDrawable();
+
+            background.setColor(
+                    Color.parseColor(
+                            "#1A1C2B"
+                    )
+            );
+
+            background.setCornerRadius(
+                    dp(18)
+            );
+
+            dialog
+                    .getWindow()
+                    .setBackgroundDrawable(
+                            background
+                    );
+        }
+
+        Button positive =
+                dialog.getButton(
+                        AlertDialog.BUTTON_POSITIVE
+                );
+
+        Button negative =
+                dialog.getButton(
+                        AlertDialog.BUTTON_NEGATIVE
+                );
+
+        if (positive != null) {
+
+            positive.setTextColor(
+                    Color.parseColor(
+                            "#FFC45C"
+                    )
+            );
+        }
+
+        if (negative != null) {
+
+            negative.setTextColor(
+                    Color.parseColor(
+                            "#B7B7C8"
+                    )
+            );
+        }
+    }
+
+    private int dp(
+            int value
+    ) {
+
+        return Math.round(
+                value *
+                        getResources()
+                                .getDisplayMetrics()
+                                .density
+        );
+    }
+
+    // =========================================================
+    // NETWORK HELPERS
+    // =========================================================
+
+    private String getSessionToken() {
+
+        String token =
+                sessionPrefs.getString(
+                        "session_token",
+                        ""
+                );
+
+        if (token == null) {
+            return "";
+        }
+
+        return token.trim();
+    }
+
+    private Map<String, String>
+    buildHeaders() {
+
+        Map<String, String> headers =
+                new HashMap<>();
+
+        headers.put(
+                "Content-Type",
+                "application/json"
+        );
+
+        headers.put(
+                "apikey",
+                ApiConfig.SUPABASE_ANON_KEY
+        );
+
+        headers.put(
+                "Authorization",
+                "Bearer " +
+                        getSessionToken()
+        );
+
+        return headers;
+    }
+
+    private void handleUpdateError(
+            int statusCode,
+            byte[] responseData,
+            String fallbackMessage
+    ) {
+
+        String message =
+                getErrorMessage(
+                        responseData,
+                        fallbackMessage
+                );
+
+        Log.e(
+                TAG,
+                "Profile update HTTP " +
+                        statusCode +
+                        ": " +
+                        message
+        );
+
+        if (
+                statusCode ==
+                        401
+        ) {
+
+            handleInvalidSession(
+                    message
+            );
+
+            return;
+        }
+
+        Toast.makeText(
+                this,
+                message,
+                Toast.LENGTH_LONG
+        ).show();
+    }
+
+    private String getErrorMessage(
+            byte[] responseData,
+            String fallback
+    ) {
+
+        if (
+                responseData == null ||
+                        responseData.length == 0
+        ) {
+
+            return fallback;
+        }
+
+        try {
+
+            String body =
+                    new String(
+                            responseData,
+                            StandardCharsets.UTF_8
+                    );
+
+            JSONObject json =
+                    new JSONObject(
+                            body
+                    );
+
+            return json.optString(
+                    "message",
+                    fallback
+            );
+
+        } catch (Exception e) {
+
+            return fallback;
+        }
+    }
+
+    // =========================================================
+    // NAME
+    // =========================================================
 
     private String buildDisplayName(
             String firstName,
@@ -761,16 +1859,20 @@ public class ProfileActivity extends AppCompatActivity {
         return fullName;
     }
 
-    // ------------------------------------------------
-    // FORMAT JOIN DATE
-    // ------------------------------------------------
+    // =========================================================
+    // JOIN DATE
+    // =========================================================
 
     private String formatJoinDate(
             String createdAt
     ) {
 
-        if (createdAt == null ||
-                createdAt.trim().isEmpty()) {
+        if (
+                createdAt == null ||
+                        createdAt
+                                .trim()
+                                .isEmpty()
+        ) {
 
             return "Not available";
         }
@@ -779,15 +1881,6 @@ public class ProfileActivity extends AppCompatActivity {
 
             String dateString =
                     createdAt.trim();
-
-            // Supabase may return more than
-            // 3 fractional-second digits.
-            //
-            // Example:
-            // 2026-09-30T01:30:20.123456+00:00
-            //
-            // Reduce the fractional part to
-            // milliseconds for SimpleDateFormat.
 
             int dotIndex =
                     dateString.indexOf('.');
@@ -800,7 +1893,10 @@ public class ProfileActivity extends AppCompatActivity {
                                 dotIndex
                         );
 
-                if (timezoneIndex < 0) {
+                if (
+                        timezoneIndex <
+                                0
+                ) {
 
                     timezoneIndex =
                             dateString.indexOf(
@@ -809,14 +1905,23 @@ public class ProfileActivity extends AppCompatActivity {
                             );
                 }
 
-                if (timezoneIndex < 0 &&
-                        dateString.endsWith("Z")) {
+                if (
+                        timezoneIndex <
+                                0 &&
+                                dateString.endsWith(
+                                        "Z"
+                                )
+                ) {
 
                     timezoneIndex =
-                            dateString.length() - 1;
+                            dateString.length() -
+                                    1;
                 }
 
-                if (timezoneIndex > dotIndex) {
+                if (
+                        timezoneIndex >
+                                dotIndex
+                ) {
 
                     String fraction =
                             dateString.substring(
@@ -824,7 +1929,10 @@ public class ProfileActivity extends AppCompatActivity {
                                     timezoneIndex
                             );
 
-                    if (fraction.length() > 3) {
+                    if (
+                            fraction.length() >
+                                    3
+                    ) {
 
                         fraction =
                                 fraction.substring(
@@ -845,13 +1953,17 @@ public class ProfileActivity extends AppCompatActivity {
                 }
             }
 
-            // Convert trailing Z to +00:00
-            if (dateString.endsWith("Z")) {
+            if (
+                    dateString.endsWith(
+                            "Z"
+                    )
+            ) {
 
                 dateString =
                         dateString.substring(
                                 0,
-                                dateString.length() - 1
+                                dateString.length() -
+                                        1
                         ) +
                                 "+00:00";
             }
@@ -897,8 +2009,10 @@ public class ProfileActivity extends AppCompatActivity {
                     e
             );
 
-            // Fallback so the user still sees something.
-            if (createdAt.length() >= 10) {
+            if (
+                    createdAt.length() >=
+                            10
+            ) {
 
                 return createdAt.substring(
                         0,
@@ -910,9 +2024,9 @@ public class ProfileActivity extends AppCompatActivity {
         }
     }
 
-    // ------------------------------------------------
-    // INVALID / EXPIRED SESSION
-    // ------------------------------------------------
+    // =========================================================
+    // INVALID SESSION
+    // =========================================================
 
     private void handleInvalidSession(
             String message
@@ -924,7 +2038,6 @@ public class ProfileActivity extends AppCompatActivity {
                 Toast.LENGTH_LONG
         ).show();
 
-        // Clear login/session information.
         sessionPrefs
                 .edit()
                 .clear()
@@ -941,16 +2054,14 @@ public class ProfileActivity extends AppCompatActivity {
                         Intent.FLAG_ACTIVITY_CLEAR_TASK
         );
 
-        startActivity(
-                intent
-        );
+        startActivity(intent);
 
         finish();
     }
 
-    // ------------------------------------------------
-    // OPEN ACTIVITY
-    // ------------------------------------------------
+    // =========================================================
+    // NAVIGATION
+    // =========================================================
 
     private void openActivity(
             Class<?> activityClass
@@ -962,14 +2073,8 @@ public class ProfileActivity extends AppCompatActivity {
                         activityClass
                 );
 
-        startActivity(
-                intent
-        );
+        startActivity(intent);
     }
-
-    // ------------------------------------------------
-    // OPEN ACTIVITY BY NAME
-    // ------------------------------------------------
 
     private void openActivityByName(
             String className
@@ -987,7 +2092,9 @@ public class ProfileActivity extends AppCompatActivity {
                     activityClass
             );
 
-        } catch (ClassNotFoundException e) {
+        } catch (
+                ClassNotFoundException e
+        ) {
 
             Toast.makeText(
                     this,

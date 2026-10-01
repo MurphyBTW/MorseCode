@@ -159,6 +159,59 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- GLOBAL FLASHLIGHT OUTPUT -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="15dp"
+                app:cardBackgroundColor="#E610141D"
+                app:cardCornerRadius="24dp"
+                app:strokeColor="#293140"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="SIGNAL OUTPUT"
+                        android:textColor="#FFFFFF"
+                        android:textSize="18sp"
+                        android:textStyle="bold"/>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:layout_marginBottom="14dp"
+                        android:text="Control whether Morse signals use the physical camera flashlight."
+                        android:textColor="#77849A"
+                        android:textSize="13sp"/>
+
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/switchFlash"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Camera Flash"
+                        android:textColor="#FFF4DF"
+                        android:textSize="15sp"
+                        android:checked="true"/>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="5dp"
+                        android:text="When off, sound and on-screen signal animations still work."
+                        android:textColor="#77849A"
+                        android:textSize="12sp"/>
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
             <!-- HELP AND INFORMATION -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"

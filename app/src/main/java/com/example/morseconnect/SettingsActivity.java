@@ -10,6 +10,7 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SwitchCompat;
 
 public class SettingsActivity extends AppCompatActivity {
 
@@ -22,6 +23,7 @@ public class SettingsActivity extends AppCompatActivity {
     private SeekBar seekFrequency;
     private SeekBar seekVolume;
     private SeekBar seekSpeed;
+    private SwitchCompat switchFlash;
 
     private Button btnLogout;
     private View btnBack;
@@ -67,6 +69,7 @@ public class SettingsActivity extends AppCompatActivity {
 
         lblSpeed = findViewById(R.id.lblSpeed);
         seekSpeed = findViewById(R.id.seekSpeed);
+        switchFlash = findViewById(R.id.switchFlash);
 
         btnLogout = findViewById(R.id.btnLogout);
 
@@ -74,6 +77,7 @@ public class SettingsActivity extends AppCompatActivity {
         int freq = sharedPreferences.getInt("frequency", 600);
         int vol = sharedPreferences.getInt("volume", 80);
         int speed = sharedPreferences.getInt("speed", 20);
+        boolean flashEnabled = sharedPreferences.getBoolean("flash_enabled", true);
 
         freq = Math.max(200, Math.min(freq, 1200));
         vol = Math.max(0, Math.min(vol, 100));
@@ -90,6 +94,7 @@ public class SettingsActivity extends AppCompatActivity {
         );
 
         seekSpeed.setProgress(speed);
+        switchFlash.setChecked(flashEnabled);
         lblSpeed.setText(
                 getString(R.string.label_speed, speed)
         );
@@ -190,6 +195,13 @@ public class SettingsActivity extends AppCompatActivity {
                     public void onStopTrackingTouch(SeekBar seekBar) {
                     }
                 }
+        );
+
+        // Global flashlight output. This single preference is read by every Morse screen.
+        switchFlash.setOnCheckedChangeListener((buttonView, isChecked) ->
+                sharedPreferences.edit()
+                        .putBoolean("flash_enabled", isChecked)
+                        .apply()
         );
 
         // Logout

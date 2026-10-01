@@ -43,6 +43,7 @@ public class PracticeActivity extends AppCompatActivity {
     int frequency = 600;
     float volume = 0.8f;
     int unitMs = 60;
+    boolean flashEnabled = true;
 
     AudioTrack audioTrack;
     final Handler handler = new Handler();
@@ -167,6 +168,7 @@ public class PracticeActivity extends AppCompatActivity {
         int volInt = prefs.getInt("volume", 80);
         volume = volInt / 100f;
         wpm = prefs.getInt("speed", 20);
+        flashEnabled = prefs.getBoolean("flash_enabled", true);
         unitMs = Math.max(20, 1200 / Math.max(5, wpm));
     }
 
@@ -252,7 +254,7 @@ public class PracticeActivity extends AppCompatActivity {
             audioTrack = null;
         }
 
-        if (cameraManager != null && cameraId != null) {
+        if (flashEnabled && cameraManager != null && cameraId != null) {
             try {
                 cameraManager.setTorchMode(cameraId, true);
             } catch (Exception ignored) {
@@ -408,7 +410,7 @@ public class PracticeActivity extends AppCompatActivity {
         }
 
         if (cameraManager != null && cameraId != null) {
-            try { cameraManager.setTorchMode(cameraId, active); } catch (Exception ignored) {}
+            try { cameraManager.setTorchMode(cameraId, active && flashEnabled); } catch (Exception ignored) {}
         }
     }
 

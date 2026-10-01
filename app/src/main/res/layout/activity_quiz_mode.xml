@@ -1,77 +1,109 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <androidx.constraintlayout.widget.ConstraintLayout
-    android:fitsSystemWindows="true"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
     android:background="@drawable/main_background"
     tools:context=".QuizModeActivity">
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fillViewport="true">
+        android:fillViewport="true"
+        android:clipToPadding="false">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="22dp">
+            android:paddingStart="20dp"
+            android:paddingTop="20dp"
+            android:paddingEnd="20dp"
+            android:paddingBottom="32dp">
 
-            <TextView
-                android:id="@+id/btnBack"
-                android:layout_width="44dp"
-                android:layout_height="44dp"
-                android:layout_marginBottom="12dp"
-                android:background="@drawable/back_button_bg"
-                android:gravity="center"
-                android:text="‹"
-                android:textColor="#FFFFFF"
-                android:textSize="36sp"
-                android:clickable="true"
-                android:focusable="true"
-                android:contentDescription="Back"/>
+            <!-- HEADER -->
 
-
-            <TextView
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="CHALLENGE STATION"
-                android:textColor="#A987E8"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:letterSpacing="0.18"/>
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="Choose your difficulty"
-                android:textColor="#FFFFFF"
-                android:textSize="29sp"
-                android:textStyle="bold"/>
+                <TextView
+                    android:id="@+id/btnBack"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:background="@drawable/back_button_bg"
+                    android:clickable="true"
+                    android:contentDescription="Back"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:text="‹"
+                    android:textColor="#FFFFFF"
+                    android:textSize="36sp" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:letterSpacing="0.12"
+                        android:text="CHALLENGE STATION"
+                        android:textColor="#FFB84D"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Quiz Mode"
+                        android:textColor="#FFFFFF"
+                        android:textSize="25sp"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- TITLE -->
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
-                android:layout_marginBottom="20dp"
-                android:text="How fast can you decode the signal?"
-                android:textColor="#77849A"
-                android:textSize="14sp"/>
+                android:layout_marginTop="28dp"
+                android:text="Choose your difficulty"
+                android:textColor="#FFF4DF"
+                android:textSize="28sp"
+                android:textStyle="bold" />
 
-            <!-- GAME PREVIEW -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="Complete 20 questions and score at least 15 to unlock the next difficulty."
+                android:textColor="#91A0B5"
+                android:textSize="14sp"
+                android:lineSpacingExtra="2dp" />
+
+            <!-- MORSE PREVIEW -->
 
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="20dp"
+                android:layout_marginTop="22dp"
                 app:cardBackgroundColor="#E610141D"
                 app:cardCornerRadius="22dp"
-                app:strokeColor="#293140"
+                app:strokeColor="#57452B"
                 app:strokeWidth="1dp">
 
                 <LinearLayout
@@ -79,52 +111,132 @@
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     android:orientation="vertical"
-                    android:padding="20dp">
+                    android:padding="22dp">
 
                     <TextView
-                        android:text=".−   −−−   .−."
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="TEST YOUR SIGNAL"
                         android:textColor="#FFB84D"
-                        android:textSize="26sp"
+                        android:textSize="11sp"
                         android:textStyle="bold"
-                        android:letterSpacing="0.15"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"/>
+                        android:letterSpacing="0.10" />
 
                     <TextView
-                        android:text="DECODE THE SIGNAL"
-                        android:textColor="#77849A"
-                        android:textSize="10sp"
-                        android:textStyle="bold"
-                        android:letterSpacing="0.16"
-                        android:layout_marginTop="8dp"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"/>
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:fontFamily="monospace"
+                        android:text="· · ·   — — —   · · ·"
+                        android:textColor="#FFB84D"
+                        android:textSize="25sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Listen • recognize • answer"
+                        android:textColor="#AAB4C8"
+                        android:textSize="12sp" />
 
                 </LinearLayout>
 
             </com.google.android.material.card.MaterialCardView>
+
+            <!-- PROGRESS -->
+
+            <TextView
+                android:id="@+id/txtProgressMessage"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:gravity="center"
+                android:text="Syncing your quiz progress..."
+                android:textColor="#AAB4C8"
+                android:textSize="13sp" />
 
             <!-- EASY -->
 
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                app:cardBackgroundColor="#E6141822"
-                app:cardCornerRadius="22dp"
-                app:strokeColor="#3E513A"
+                android:layout_marginTop="22dp"
+                app:cardBackgroundColor="#E610141D"
+                app:cardCornerRadius="20dp"
+                app:strokeColor="#293140"
                 app:strokeWidth="1dp">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnEasy"
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="68dp"
-                    android:text="@string/quiz_easy"
-                    android:textColor="#FFFFFF"
-                    android:textStyle="bold"
-                    android:background="@drawable/btn_settings_bg"
-                    app:backgroundTint="@null"
-                    app:cornerRadius="20dp"/>
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="EASY"
+                                android:textColor="#FFB84D"
+                                android:textSize="11sp"
+                                android:textStyle="bold"
+                                android:letterSpacing="0.10" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="Signal Starter"
+                                android:textColor="#FFFFFF"
+                                android:textSize="19sp"
+                                android:textStyle="bold" />
+
+                        </LinearLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="20 Q"
+                            android:textColor="#AAB4C8"
+                            android:textSize="12sp" />
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/txtEasyStatus"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Checking progress..."
+                        android:textColor="#AAB4C8"
+                        android:textSize="13sp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnEasy"
+                        android:layout_width="match_parent"
+                        android:layout_height="54dp"
+                        android:layout_marginTop="14dp"
+                        android:text="START EASY"
+                        android:textColor="#FFFFFF"
+                        android:textStyle="bold"
+                        app:backgroundTint="#2A2142"
+                        app:cornerRadius="16dp"
+                        app:strokeColor="#7056A8"
+                        app:strokeWidth="1dp" />
+
+                </LinearLayout>
 
             </com.google.android.material.card.MaterialCardView>
 
@@ -133,22 +245,82 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                app:cardBackgroundColor="#E6141822"
-                app:cardCornerRadius="22dp"
-                app:strokeColor="#5A4324"
+                android:layout_marginTop="14dp"
+                app:cardBackgroundColor="#E610141D"
+                app:cardCornerRadius="20dp"
+                app:strokeColor="#293140"
                 app:strokeWidth="1dp">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnMedium"
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="68dp"
-                    android:text="@string/quiz_medium"
-                    android:textColor="#241507"
-                    android:textStyle="bold"
-                    android:background="@drawable/btn_library_bg"
-                    app:backgroundTint="@null"
-                    app:cornerRadius="20dp"/>
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="MEDIUM"
+                                android:textColor="#A987E8"
+                                android:textSize="11sp"
+                                android:textStyle="bold"
+                                android:letterSpacing="0.10" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="Signal Operator"
+                                android:textColor="#FFFFFF"
+                                android:textSize="19sp"
+                                android:textStyle="bold" />
+
+                        </LinearLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="20 Q"
+                            android:textColor="#AAB4C8"
+                            android:textSize="12sp" />
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/txtMediumStatus"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Checking progress..."
+                        android:textColor="#77849A"
+                        android:textSize="13sp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnMedium"
+                        android:layout_width="match_parent"
+                        android:layout_height="54dp"
+                        android:layout_marginTop="14dp"
+                        android:text="START MEDIUM"
+                        android:textColor="#FFFFFF"
+                        android:textStyle="bold"
+                        app:backgroundTint="#2A2142"
+                        app:cornerRadius="16dp"
+                        app:strokeColor="#7056A8"
+                        app:strokeWidth="1dp" />
+
+                </LinearLayout>
 
             </com.google.android.material.card.MaterialCardView>
 
@@ -157,33 +329,93 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardBackgroundColor="#E6141822"
-                app:cardCornerRadius="22dp"
-                app:strokeColor="#4D3B72"
+                android:layout_marginTop="14dp"
+                app:cardBackgroundColor="#E610141D"
+                app:cardCornerRadius="20dp"
+                app:strokeColor="#293140"
                 app:strokeWidth="1dp">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnHard"
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="68dp"
-                    android:text="@string/quiz_hard"
-                    android:textColor="#FFFFFF"
-                    android:textStyle="bold"
-                    android:background="@drawable/btn_quiz_bg"
-                    app:backgroundTint="@null"
-                    app:cornerRadius="20dp"/>
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="HARD"
+                                android:textColor="#E87575"
+                                android:textSize="11sp"
+                                android:textStyle="bold"
+                                android:letterSpacing="0.10" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="Signal Specialist"
+                                android:textColor="#FFFFFF"
+                                android:textSize="19sp"
+                                android:textStyle="bold" />
+
+                        </LinearLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="20 Q"
+                            android:textColor="#AAB4C8"
+                            android:textSize="12sp" />
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/txtHardStatus"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Checking progress..."
+                        android:textColor="#77849A"
+                        android:textSize="13sp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnHard"
+                        android:layout_width="match_parent"
+                        android:layout_height="54dp"
+                        android:layout_marginTop="14dp"
+                        android:text="START HARD"
+                        android:textColor="#FFFFFF"
+                        android:textStyle="bold"
+                        app:backgroundTint="#2A2142"
+                        app:cornerRadius="16dp"
+                        app:strokeColor="#7056A8"
+                        app:strokeWidth="1dp" />
+
+                </LinearLayout>
 
             </com.google.android.material.card.MaterialCardView>
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="22dp"
+                android:layout_marginTop="18dp"
                 android:gravity="center"
-                android:text="SPEED • ACCURACY • STREAK"
-                android:textColor="#3D4656"
-                android:textSize="10sp"
-                android:letterSpacing="0.18"/>
+                android:text="Passing score  •  15 / 20"
+                android:textColor="#77849A"
+                android:textSize="12sp" />
 
         </LinearLayout>
 

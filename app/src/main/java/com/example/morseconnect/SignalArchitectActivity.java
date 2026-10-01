@@ -1,6 +1,7 @@
 package com.example.morseconnect;
 
 import android.content.SharedPreferences;
+import android.hardware.camera2.CameraManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -55,6 +56,14 @@ public class SignalArchitectActivity extends AppCompatActivity {
     private SharedPreferences sessionPrefs;
 
     private RequestQueue requestQueue;
+
+    private CameraManager cameraManager;
+    private String cameraId;
+    private boolean flashEnabled = true;
+    private int flashUnitMs = 60;
+
+    private final Handler signalHandler =
+            new Handler(Looper.getMainLooper());
 
     private final Handler handler =
             new Handler(Looper.getMainLooper());
@@ -179,6 +188,16 @@ public class SignalArchitectActivity extends AppCompatActivity {
                 Volley.newRequestQueue(this);
 
         bindViews();
+
+        cameraManager = (CameraManager) getSystemService(CAMERA_SERVICE);
+        try {
+            String[] ids = cameraManager.getCameraIdList();
+            cameraId = ids.length > 0 ? ids[0] : null;
+        } catch (Exception ignored) {
+            cameraId = null;
+        }
+
+        loadSignalSettings();
 
         setupCharacters();
 
@@ -442,6 +461,9 @@ public class SignalArchitectActivity extends AppCompatActivity {
                 timerRunnable
         );
 
+        signalHandler.removeCallbacksAndMessages(null);
+        setTorch(false);
+
         correct = 0;
         combo = 0;
         elapsedSeconds = 0;
@@ -560,10 +582,17 @@ public class SignalArchitectActivity extends AppCompatActivity {
 
         txtFeedback.setText("");
 
-        txtSignal.setText(
+        String currentMorse =
                 getMorse(
                         currentAnswer
-                )
+                );
+
+        txtSignal.setText(
+                currentMorse
+        );
+
+        playFlashMorse(
+                currentMorse
         );
 
         ArrayList<String> choices =
@@ -870,6 +899,9 @@ public class SignalArchitectActivity extends AppCompatActivity {
                 timerRunnable
         );
 
+        signalHandler.removeCallbacksAndMessages(null);
+        setTorch(false);
+
         disableAnswerButtons();
 
         submitMatchResult(
@@ -900,6 +932,9 @@ public class SignalArchitectActivity extends AppCompatActivity {
         handler.removeCallbacks(
                 timerRunnable
         );
+
+        signalHandler.removeCallbacksAndMessages(null);
+        setTorch(false);
 
         disableAnswerButtons();
 
@@ -1525,6 +1560,76 @@ public class SignalArchitectActivity extends AppCompatActivity {
         );
     }
 
+
+    // ------------------------------------------------
+    // GLOBAL FLASHLIGHT SETTING
+    // ------------------------------------------------
+
+    private void loadSignalSettings() {
+        SharedPreferences prefs =
+                getSharedPreferences("MorseSettings", MODE_PRIVATE);
+
+        flashEnabled = prefs.getBoolean("flash_enabled", true);
+        int wpm = prefs.getInt("speed", 20);
+        flashUnitMs = Math.max(20, 1200 / Math.max(5, wpm));
+
+        if (!flashEnabled) {
+            setTorch(false);
+        }
+    }
+
+    private void playFlashMorse(String code) {
+        signalHandler.removeCallbacksAndMessages(null);
+        setTorch(false);
+
+        if (!flashEnabled || code == null || code.trim().isEmpty()) {
+            return;
+        }
+
+        long delay = 0L;
+
+        for (char c : code.toCharArray()) {
+            if (c == '.' || c == '-') {
+                int duration = c == '.' ? flashUnitMs : flashUnitMs * 3;
+                long onAt = delay;
+                long offAt = delay + duration;
+
+                signalHandler.postDelayed(() -> setTorch(true), onAt);
+                signalHandler.postDelayed(() -> setTorch(false), offAt);
+
+                delay += duration + flashUnitMs;
+            } else if (c == ' ') {
+                delay += flashUnitMs * 2L;
+            }
+        }
+
+        signalHandler.postDelayed(() -> setTorch(false), delay + 50L);
+    }
+
+    private void setTorch(boolean enabled) {
+        if (cameraManager == null || cameraId == null) {
+            return;
+        }
+
+        try {
+            cameraManager.setTorchMode(cameraId, enabled && flashEnabled);
+        } catch (Exception ignored) {
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadSignalSettings();
+    }
+
+    @Override
+    protected void onPause() {
+        signalHandler.removeCallbacksAndMessages(null);
+        setTorch(false);
+        super.onPause();
+    }
+
     // ------------------------------------------------
     // DESTROY
     // ------------------------------------------------
@@ -1535,6 +1640,9 @@ public class SignalArchitectActivity extends AppCompatActivity {
         handler.removeCallbacks(
                 timerRunnable
         );
+
+        signalHandler.removeCallbacksAndMessages(null);
+        setTorch(false);
 
         if (
                 countdownRunnable != null

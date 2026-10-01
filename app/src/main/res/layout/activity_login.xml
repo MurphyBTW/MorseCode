@@ -1,24 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <androidx.constraintlayout.widget.ConstraintLayout
-    android:fitsSystemWindows="true"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/main_background">
+    android:background="@drawable/main_background"
+    android:fitsSystemWindows="true">
 
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/cardLogin"
+    <ScrollView
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="24dp"
-        android:layout_marginEnd="24dp"
-        app:cardBackgroundColor="#E610141D"
-        app:cardCornerRadius="28dp"
-        app:cardElevation="12dp"
-        app:strokeColor="#263143"
-        app:strokeWidth="1dp"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        android:overScrollMode="never"
+        android:scrollbars="none"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -27,213 +22,302 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:gravity="center"
+            android:minHeight="700dp"
             android:orientation="vertical"
-            android:padding="28dp">
+            android:paddingTop="28dp"
+            android:paddingBottom="28dp">
 
-            <!-- Signal status -->
-            <LinearLayout
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardLogin"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:layout_marginStart="24dp"
+                android:layout_marginEnd="24dp"
+                app:cardBackgroundColor="#E610141D"
+                app:cardCornerRadius="28dp"
+                app:cardElevation="12dp"
+                app:strokeColor="#263143"
+                app:strokeWidth="1dp">
 
-                <View
-                    android:layout_width="10dp"
-                    android:layout_height="10dp"
-                    android:background="@drawable/signal_lamp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
-                    android:text="SIGNAL ONLINE"
-                    android:textColor="#FFB84D"
-                    android:textSize="11sp"
-                    android:textStyle="bold"
-                    android:letterSpacing="0.12" />
-
-            </LinearLayout>
-
-            <!-- App title -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
-                android:text="MORSECONNECT"
-                android:textColor="#FFFFFF"
-                android:textSize="30sp"
-                android:textStyle="bold"
-                android:letterSpacing="0.03" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
-                android:text="Tune in. Learn Morse. Send the signal."
-                android:textColor="#8E9AAF"
-                android:textSize="14sp" />
-
-            <!-- Morse decoration -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="• • •   — —   • — •   — •"
-                android:textColor="#8B5CF6"
-                android:textSize="15sp"
-                android:letterSpacing="0.08" />
-
-            <!-- Username -->
-            <com.google.android.material.textfield.TextInputLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="26dp"
-                android:hint="Username"
-                app:boxBackgroundColor="#10151F"
-                app:boxBackgroundMode="outline"
-                app:boxCornerRadiusBottomEnd="16dp"
-                app:boxCornerRadiusBottomStart="16dp"
-                app:boxCornerRadiusTopEnd="16dp"
-                app:boxCornerRadiusTopStart="16dp"
-                app:boxStrokeColor="#344052"
-                app:hintTextColor="#8290A8">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/edtUser"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="text"
-                    android:textColor="#FFFFFF"
-                    android:textColorHint="#667085"
-                    android:textSize="15sp" />
+                    android:orientation="vertical"
+                    android:padding="28dp">
 
-            </com.google.android.material.textfield.TextInputLayout>
+                    <!-- SIGNAL STATUS -->
 
-            <!-- Password -->
-            <com.google.android.material.textfield.TextInputLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:hint="Password"
-                app:boxBackgroundColor="#10151F"
-                app:boxBackgroundMode="outline"
-                app:boxCornerRadiusBottomEnd="16dp"
-                app:boxCornerRadiusBottomStart="16dp"
-                app:boxCornerRadiusTopEnd="16dp"
-                app:boxCornerRadiusTopStart="16dp"
-                app:boxStrokeColor="#344052"
-                app:endIconMode="password_toggle"
-                app:endIconTint="#8290A8"
-                app:hintTextColor="#8290A8">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/edtPass"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="textPassword"
-                    android:textColor="#FFFFFF"
-                    android:textColorHint="#667085"
-                    android:textSize="15sp" />
+                        <View
+                            android:layout_width="10dp"
+                            android:layout_height="10dp"
+                            android:background="@drawable/signal_lamp" />
 
-            </com.google.android.material.textfield.TextInputLayout>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="10dp"
+                            android:text="SIGNAL ONLINE"
+                            android:textColor="#FFB84D"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            android:letterSpacing="0.12" />
 
-            <!-- Forgot password -->
-            <TextView
-                android:id="@+id/txtForgot"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                android:layout_marginTop="10dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:padding="5dp"
-                android:text="Forgot password?"
-                android:textColor="#A78BFA"
-                android:textSize="13sp"
-                android:textStyle="bold" />
+                    </LinearLayout>
 
-            <!-- Login -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnLogin"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:layout_marginTop="18dp"
-                android:text="LOGIN"
-                android:textAllCaps="false"
-                android:textColor="#FFFFFF"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                app:backgroundTint="#8B5CF6"
-                app:cornerRadius="18dp"
-                app:rippleColor="#55FFFFFF" />
+                    <!-- TITLE -->
 
-            <!-- Divider -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="18dp"
+                        android:text="MORSECONNECT"
+                        android:textColor="#FFFFFF"
+                        android:textSize="30sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.03" />
 
-                <View
-                    android:layout_width="0dp"
-                    android:layout_height="1dp"
-                    android:layout_weight="1"
-                    android:background="#293241" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="5dp"
+                        android:text="Tune in. Learn Morse. Send the signal."
+                        android:textColor="#8E9AAF"
+                        android:textSize="14sp" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
-                    android:layout_marginEnd="12dp"
-                    android:text="NEW OPERATOR?"
-                    android:textColor="#667085"
-                    android:textSize="10sp"
-                    android:textStyle="bold"
-                    android:letterSpacing="0.08" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:text="• • •   — —   • — •   — •"
+                        android:textColor="#8B5CF6"
+                        android:textSize="15sp"
+                        android:letterSpacing="0.08" />
 
-                <View
-                    android:layout_width="0dp"
-                    android:layout_height="1dp"
-                    android:layout_weight="1"
-                    android:background="#293241" />
+                    <!-- USERNAME -->
 
-            </LinearLayout>
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="26dp"
+                        android:hint="Username"
+                        app:boxBackgroundColor="#10151F"
+                        app:boxBackgroundMode="outline"
+                        app:boxCornerRadiusBottomEnd="16dp"
+                        app:boxCornerRadiusBottomStart="16dp"
+                        app:boxCornerRadiusTopEnd="16dp"
+                        app:boxCornerRadiusTopStart="16dp"
+                        app:boxStrokeColor="#344052"
+                        app:hintTextColor="#8290A8">
 
-            <!-- Signup
-                 IMPORTANT:
-                 This MUST be a Button because LoginActivity.java
-                 declares btnSignup as Button. -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnSignup"
-                android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:layout_marginTop="14dp"
-                android:text="Create an account"
-                android:textAllCaps="false"
-                android:textColor="#FFB84D"
-                android:textSize="15sp"
-                android:textStyle="bold"
-                app:backgroundTint="@android:color/transparent"
-                app:cornerRadius="18dp"
-                app:rippleColor="#33FFB84D"
-                app:strokeColor="#3A4354"
-                app:strokeWidth="1dp" />
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/edtUser"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="text"
+                            android:textColor="#FFFFFF"
+                            android:textColorHint="#667085"
+                            android:textSize="15sp" />
 
-            <!-- Footer -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:gravity="center"
-                android:text="— • —   SECURE SIGNAL   — • —"
-                android:textColor="#465164"
-                android:textSize="9sp"
-                android:letterSpacing="0.08" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- PASSWORD -->
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="14dp"
+                        android:hint="Password"
+                        app:boxBackgroundColor="#10151F"
+                        app:boxBackgroundMode="outline"
+                        app:boxCornerRadiusBottomEnd="16dp"
+                        app:boxCornerRadiusBottomStart="16dp"
+                        app:boxCornerRadiusTopEnd="16dp"
+                        app:boxCornerRadiusTopStart="16dp"
+                        app:boxStrokeColor="#344052"
+                        app:endIconMode="password_toggle"
+                        app:endIconTint="#8290A8"
+                        app:hintTextColor="#8290A8">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/edtPass"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="textPassword"
+                            android:textColor="#FFFFFF"
+                            android:textColorHint="#667085"
+                            android:textSize="15sp" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- FORGOT PASSWORD -->
+
+                    <TextView
+                        android:id="@+id/txtForgot"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="end"
+                        android:layout_marginTop="10dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:padding="5dp"
+                        android:text="Forgot password?"
+                        android:textColor="#A78BFA"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <!-- LOGIN -->
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnLogin"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:layout_marginTop="18dp"
+                        android:text="LOGIN"
+                        android:textAllCaps="false"
+                        android:textColor="#FFFFFF"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        app:backgroundTint="#8B5CF6"
+                        app:cornerRadius="18dp"
+                        app:rippleColor="#55FFFFFF" />
+
+                    <!-- OFFLINE DIVIDER -->
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="18dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <View
+                            android:layout_width="0dp"
+                            android:layout_height="1dp"
+                            android:layout_weight="1"
+                            android:background="#293241" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="12dp"
+                            android:layout_marginEnd="12dp"
+                            android:text="OR"
+                            android:textColor="#667085"
+                            android:textSize="10sp"
+                            android:textStyle="bold" />
+
+                        <View
+                            android:layout_width="0dp"
+                            android:layout_height="1dp"
+                            android:layout_weight="1"
+                            android:background="#293241" />
+
+                    </LinearLayout>
+
+                    <!-- CONTINUE OFFLINE -->
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnOffline"
+                        android:layout_width="match_parent"
+                        android:layout_height="52dp"
+                        android:layout_marginTop="14dp"
+                        android:text="Continue Offline"
+                        android:textAllCaps="false"
+                        android:textColor="#D7DCE6"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        app:backgroundTint="@android:color/transparent"
+                        app:cornerRadius="18dp"
+                        app:rippleColor="#338B5CF6"
+                        app:strokeColor="#4D3B72"
+                        app:strokeWidth="1dp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="7dp"
+                        android:gravity="center"
+                        android:text="Library Mode only • No account required"
+                        android:textColor="#667085"
+                        android:textSize="10sp" />
+
+                    <!-- SIGNUP DIVIDER -->
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="22dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <View
+                            android:layout_width="0dp"
+                            android:layout_height="1dp"
+                            android:layout_weight="1"
+                            android:background="#293241" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="12dp"
+                            android:layout_marginEnd="12dp"
+                            android:text="NEW OPERATOR?"
+                            android:textColor="#667085"
+                            android:textSize="10sp"
+                            android:textStyle="bold"
+                            android:letterSpacing="0.08" />
+
+                        <View
+                            android:layout_width="0dp"
+                            android:layout_height="1dp"
+                            android:layout_weight="1"
+                            android:background="#293241" />
+
+                    </LinearLayout>
+
+                    <!-- SIGNUP -->
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnSignup"
+                        android:layout_width="match_parent"
+                        android:layout_height="52dp"
+                        android:layout_marginTop="14dp"
+                        android:text="Create an account"
+                        android:textAllCaps="false"
+                        android:textColor="#FFB84D"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        app:backgroundTint="@android:color/transparent"
+                        app:cornerRadius="18dp"
+                        app:rippleColor="#33FFB84D"
+                        app:strokeColor="#3A4354"
+                        app:strokeWidth="1dp" />
+
+                    <!-- FOOTER -->
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="20dp"
+                        android:gravity="center"
+                        android:text="— • —   SECURE SIGNAL   — • —"
+                        android:textColor="#465164"
+                        android:textSize="9sp"
+                        android:letterSpacing="0.08" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
 
         </LinearLayout>
 
-    </com.google.android.material.card.MaterialCardView>
+    </ScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
-

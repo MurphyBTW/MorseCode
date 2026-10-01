@@ -1,28 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <androidx.constraintlayout.widget.ConstraintLayout
-    android:fitsSystemWindows="true"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/main_background">
+    android:background="@drawable/main_background"
+    android:fitsSystemWindows="true"
+    tools:context=".DailyChallengeActivity">
 
     <ScrollView
-        android:id="@+id/dailyScroll"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fillViewport="true"
-        android:clipToPadding="false"
-        android:paddingBottom="16dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="20dp">
+            android:paddingStart="20dp"
+            android:paddingTop="20dp"
+            android:paddingEnd="20dp"
+            android:paddingBottom="32dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -35,130 +35,213 @@
                     android:layout_width="44dp"
                     android:layout_height="44dp"
                     android:background="@drawable/back_button_bg"
+                    android:clickable="true"
+                    android:focusable="true"
                     android:gravity="center"
                     android:text="‹"
                     android:textColor="#FFFFFF"
                     android:textSize="36sp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:contentDescription="Back"/>
+                    android:contentDescription="Back" />
 
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
                     android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:layout_marginStart="12dp">
+                    android:orientation="vertical">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:letterSpacing="0.12"
                         android:text="DAILY TRANSMISSION"
                         android:textColor="#FFB84D"
                         android:textSize="11sp"
-                        android:textStyle="bold"
-                        android:letterSpacing="0.12"/>
+                        android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
                         android:text="Daily Challenge"
                         android:textColor="#FFFFFF"
                         android:textSize="25sp"
-                        android:textStyle="bold"/>
+                        android:textStyle="bold" />
+
                 </LinearLayout>
+
             </LinearLayout>
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="A little practice every day helps you master every signal."
-                android:textColor="#AAB4C8"
-                android:textSize="14sp"/>
+                android:layout_marginTop="30dp"
+                android:text="One transmission.&#10;One chance each day."
+                android:textColor="#FFF4DF"
+                android:textSize="29sp"
+                android:textStyle="bold"
+                android:lineSpacingExtra="3dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="9dp"
+                android:text="Complete today's 20-question Morse challenge and earn bonus MMR based on your score."
+                android:textColor="#91A0B5"
+                android:textSize="14sp"
+                android:lineSpacingExtra="3dp" />
 
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="22dp"
+                android:layout_marginTop="26dp"
                 app:cardBackgroundColor="#E610141D"
                 app:cardCornerRadius="22dp"
-                app:strokeColor="#57452B"
+                app:strokeColor="#59462A"
                 app:strokeWidth="1dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:gravity="center"
                     android:orientation="vertical"
-                    android:padding="20dp">
+                    android:padding="24dp">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="TODAY'S MISSION"
+                        android:letterSpacing="0.12"
+                        android:text="TODAY'S SIGNAL"
                         android:textColor="#FFB84D"
-                        android:textSize="11sp"
-                        android:textStyle="bold"
-                        android:letterSpacing="0.1"/>
+                        android:textSize="10sp"
+                        android:textStyle="bold" />
 
                     <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:fontFamily="monospace"
+                        android:text="· — ·   · · ·   —"
+                        android:textColor="#FFB84D"
+                        android:textSize="28sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/txtDailyStatus"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp"
-                        android:text="Warm-up: Decode the signal"
+                        android:layout_marginTop="16dp"
+                        android:gravity="center"
+                        android:text="Checking today's transmission..."
                         android:textColor="#FFFFFF"
-                        android:textSize="21sp"
-                        android:textStyle="bold"/>
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
 
                     <TextView
+                        android:id="@+id/txtDailyDate"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="7dp"
-                        android:text="Complete a short Morse code practice session. Focus on recognizing each pattern without rushing."
-                        android:textColor="#AAB4C8"
-                        android:textSize="14sp"
-                        android:lineSpacingExtra="3dp"/>
+                        android:layout_marginTop="6dp"
+                        android:gravity="center"
+                        android:text="Philippine Time"
+                        android:textColor="#77849A"
+                        android:textSize="12sp" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="horizontal">
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="0dp"
+                    android:layout_height="120dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="6dp"
+                    app:cardBackgroundColor="#E6171B27"
+                    app:cardCornerRadius="18dp"
+                    app:strokeColor="#353044"
+                    app:strokeWidth="1dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="18dp"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="MODE\nBeginner practice"
-                            android:textColor="#C7D0E2"
-                            android:textSize="12sp"/>
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:padding="12dp">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="GOAL\nBeginner warm-up"
-                            android:gravity="end"
-                            android:textColor="#C7D0E2"
-                            android:textSize="12sp"/>
-                    </LinearLayout>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+                            android:text="SCORE"
+                            android:textColor="#77849A"
+                            android:textSize="10sp"
+                            android:textStyle="bold" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:text="MISSION CHECKLIST"
-                android:textColor="#FFFFFF"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:letterSpacing="0.08"/>
+                        <TextView
+                            android:id="@+id/txtDailyScore"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:text="-- / 20"
+                            android:textColor="#FFFFFF"
+                            android:textSize="22sp"
+                            android:textStyle="bold" />
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="0dp"
+                    android:layout_height="120dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="6dp"
+                    app:cardBackgroundColor="#E6171B27"
+                    app:cardCornerRadius="18dp"
+                    app:strokeColor="#59462A"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:padding="12dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="REWARD"
+                            android:textColor="#77849A"
+                            android:textSize="10sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/txtDailyReward"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:text="+-- MMR"
+                            android:textColor="#FFB84D"
+                            android:textSize="22sp"
+                            android:textStyle="bold" />
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+            </LinearLayout>
 
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                app:cardBackgroundColor="#E610141D"
+                android:layout_marginTop="16dp"
+                app:cardBackgroundColor="#B8141822"
                 app:cardCornerRadius="18dp"
                 app:strokeColor="#293140"
                 app:strokeWidth="1dp">
@@ -167,65 +250,52 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="18dp">
 
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="1. Recognize the Morse patterns"
-                        android:textColor="#FFFFFF"
-                        android:textSize="14sp"
-                        android:paddingVertical="8dp"/>
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:background="#293140"/>
+                        android:text="DAILY MMR REWARD"
+                        android:textColor="#A987E8"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="2. Answer the practice questions"
-                        android:textColor="#FFFFFF"
-                        android:textSize="14sp"
-                        android:paddingVertical="8dp"/>
+                        android:layout_marginTop="12dp"
+                        android:fontFamily="monospace"
+                        android:text="0–9       +0 MMR&#10;10–12     +5 MMR&#10;13–14    +10 MMR&#10;15–16    +15 MMR&#10;17–18    +20 MMR&#10;19        +25 MMR&#10;20        +30 MMR"
+                        android:textColor="#AAB4C8"
+                        android:textSize="13sp"
+                        android:lineSpacingExtra="5dp" />
 
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:background="#293140"/>
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="3. Finish today's warm-up"
-                        android:textColor="#FFFFFF"
-                        android:textSize="14sp"
-                        android:paddingVertical="8dp"/>
                 </LinearLayout>
+
             </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnStartDaily"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:layout_marginTop="20dp"
-                android:text="Start Daily Practice"
-                android:textColor="#241507"
+                android:layout_height="60dp"
+                android:layout_marginTop="24dp"
+                android:text="CHECKING..."
+                android:textColor="#FFFFFF"
                 android:textStyle="bold"
-                app:backgroundTint="#FFB84D"
-                app:cornerRadius="18dp"/>
+                app:backgroundTint="#6F52A8"
+                app:cornerRadius="18dp" />
 
             <TextView
-                android:id="@+id/txtDailyNote"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="12dp"
                 android:gravity="center"
-                android:text="Daily completion and streak tracking will be added next."
+                android:text="Resets at 12:00 AM Philippine Time"
                 android:textColor="#77849A"
-                android:textSize="12sp"/>
+                android:textSize="11sp" />
+
         </LinearLayout>
+
     </ScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

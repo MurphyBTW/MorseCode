@@ -47,6 +47,7 @@ public class LearnActivity extends AppCompatActivity {
     private int frequency = 600;
     private float volume = 0.8f;
     private int unitMs = 60;
+    private boolean flashEnabled = true;
 
     private boolean isPlaying = false;
 
@@ -414,7 +415,7 @@ public class LearnActivity extends AppCompatActivity {
         }
 
         try {
-            cameraManager.setTorchMode(cameraId, enabled);
+            cameraManager.setTorchMode(cameraId, enabled && flashEnabled);
         } catch (Exception ignored) {
         }
     }
@@ -427,6 +428,7 @@ public class LearnActivity extends AppCompatActivity {
         int volInt = prefs.getInt("volume", 80);
         volume = volInt / 100f;
         wpm = prefs.getInt("speed", 20);
+        flashEnabled = prefs.getBoolean("flash_enabled", true);
 
         unitMs = Math.max(20, 1200 / Math.max(5, wpm));
     }
