@@ -67,8 +67,8 @@ public class LearnActivity extends AppCompatActivity {
         flashIndicator = findViewById(R.id.flashIndicator);
         btnPlay = findViewById(R.id.btnPlay);
 
-        cameraManager = (CameraManager)
-                getSystemService(Context.CAMERA_SERVICE);
+        cameraManager =
+                (CameraManager) getSystemService(Context.CAMERA_SERVICE);
 
         try {
             String[] cameraIds = cameraManager.getCameraIdList();
@@ -76,6 +76,7 @@ public class LearnActivity extends AppCompatActivity {
             if (cameraIds.length > 0) {
                 cameraId = cameraIds[0];
             }
+
         } catch (Exception ignored) {
             cameraId = null;
         }
@@ -86,30 +87,42 @@ public class LearnActivity extends AppCompatActivity {
         setupCategorySpinner();
 
         btnPlay.setOnClickListener(v -> {
+
             if (isPlaying) {
                 cancelPlayback();
             } else {
                 playSelectedMorse();
             }
+
         });
     }
 
-    // Creates a Spinner adapter with white text for both
-    // the selected item and the dropdown list.
+    // =========================================================
+    // SPINNER ADAPTER
+    // =========================================================
+
     private ArrayAdapter<String> createWhiteSpinnerAdapter(
             ArrayList<String> items
     ) {
+
         return new ArrayAdapter<String>(
                 this,
                 android.R.layout.simple_spinner_item,
                 items
         ) {
+
             private View styleSpinnerText(View view) {
+
                 if (view instanceof TextView) {
+
                     TextView textView = (TextView) view;
+
                     textView.setTextColor(Color.WHITE);
+
+                    // Keep spinner text smaller and clean.
                     textView.setTextSize(14);
                 }
+
                 return view;
             }
 
@@ -119,11 +132,13 @@ public class LearnActivity extends AppCompatActivity {
                     View convertView,
                     ViewGroup parent
             ) {
+
                 View view = super.getView(
                         position,
                         convertView,
                         parent
                 );
+
                 return styleSpinnerText(view);
             }
 
@@ -133,6 +148,7 @@ public class LearnActivity extends AppCompatActivity {
                     View convertView,
                     ViewGroup parent
             ) {
+
                 View view = super.getDropDownView(
                         position,
                         convertView,
@@ -140,11 +156,21 @@ public class LearnActivity extends AppCompatActivity {
                 );
 
                 if (view instanceof TextView) {
+
                     TextView textView = (TextView) view;
+
                     textView.setTextColor(Color.WHITE);
                     textView.setTextSize(14);
-                    textView.setBackgroundColor(Color.rgb(23, 28, 39));
-                    textView.setPadding(24, 18, 24, 18);
+                    textView.setBackgroundColor(
+                            Color.rgb(23, 28, 39)
+                    );
+
+                    textView.setPadding(
+                            24,
+                            18,
+                            24,
+                            18
+                    );
                 }
 
                 return view;
@@ -152,16 +178,29 @@ public class LearnActivity extends AppCompatActivity {
         };
     }
 
+    // =========================================================
+    // CATEGORY SPINNER
+    // =========================================================
+
     private void setupCategorySpinner() {
-        if (categorizedMorse == null || categorizedMorse.isEmpty()) {
+
+        if (categorizedMorse == null ||
+                categorizedMorse.isEmpty()) {
+
             txtLetter.setText("No Morse data found");
+            txtLetter.setTextSize(28);
+
             txtMorse.setText("");
+
             btnPlay.setEnabled(false);
+
             return;
         }
 
         ArrayList<String> categories =
-                new ArrayList<>(categorizedMorse.keySet());
+                new ArrayList<>(
+                        categorizedMorse.keySet()
+                );
 
         ArrayAdapter<String> adapter =
                 createWhiteSpinnerAdapter(categories);
@@ -174,6 +213,7 @@ public class LearnActivity extends AppCompatActivity {
 
         spinnerCategory.setOnItemSelectedListener(
                 new AdapterView.OnItemSelectedListener() {
+
                     @Override
                     public void onItemSelected(
                             AdapterView<?> parent,
@@ -181,32 +221,52 @@ public class LearnActivity extends AppCompatActivity {
                             int position,
                             long id
                     ) {
-                        String category = categories.get(position);
-                        selectedCategory = categorizedMorse.get(category);
+
+                        String category =
+                                categories.get(position);
+
+                        selectedCategory =
+                                categorizedMorse.get(category);
+
                         setupLetterSpinner();
                     }
 
                     @Override
-                    public void onNothingSelected(AdapterView<?> parent) {
+                    public void onNothingSelected(
+                            AdapterView<?> parent
+                    ) {
                     }
                 }
         );
     }
 
+    // =========================================================
+    // SIGNAL / LETTER SPINNER
+    // =========================================================
+
     private void setupLetterSpinner() {
+
         cancelPlayback();
 
-        if (selectedCategory == null || selectedCategory.isEmpty()) {
+        if (selectedCategory == null ||
+                selectedCategory.isEmpty()) {
+
             txtLetter.setText("No entries found");
+            txtLetter.setTextSize(28);
+
             txtMorse.setText("");
+
             btnPlay.setEnabled(false);
+
             return;
         }
 
         btnPlay.setEnabled(true);
 
         ArrayList<String> entries =
-                new ArrayList<>(selectedCategory.keySet());
+                new ArrayList<>(
+                        selectedCategory.keySet()
+                );
 
         ArrayAdapter<String> adapter =
                 createWhiteSpinnerAdapter(entries);
@@ -219,6 +279,7 @@ public class LearnActivity extends AppCompatActivity {
 
         spinnerLetters.setOnItemSelectedListener(
                 new AdapterView.OnItemSelectedListener() {
+
                     @Override
                     public void onItemSelected(
                             AdapterView<?> parent,
@@ -226,51 +287,146 @@ public class LearnActivity extends AppCompatActivity {
                             int position,
                             long id
                     ) {
+
                         cancelPlayback();
 
-                        String entry = entries.get(position);
+                        String entry =
+                                entries.get(position);
+
                         txtLetter.setText(entry);
 
-                        String code = selectedCategory.get(entry);
-                        txtMorse.setText(code == null ? "" : code);
+                        // Automatically resize the main signal
+                        // depending on how long the text is.
+                        adjustSignalTextSize(entry);
+
+                        String code =
+                                selectedCategory.get(entry);
+
+                        txtMorse.setText(
+                                code == null ? "" : code
+                        );
                     }
 
                     @Override
-                    public void onNothingSelected(AdapterView<?> parent) {
+                    public void onNothingSelected(
+                            AdapterView<?> parent
+                    ) {
                     }
                 }
         );
     }
 
-    private void playSelectedMorse() {
-        if (selectedCategory == null
-                || spinnerLetters.getSelectedItem() == null) {
+    // =========================================================
+    // AUTOMATIC SIGNAL FONT SIZE
+    // =========================================================
+
+    private void adjustSignalTextSize(String entry) {
+
+        if (entry == null ||
+                entry.trim().isEmpty()) {
+
+            txtLetter.setTextSize(64);
             return;
         }
 
-        String entry = spinnerLetters.getSelectedItem().toString();
-        String code = selectedCategory.get(entry);
+        int length = entry.trim().length();
 
-        if (code != null && !code.trim().isEmpty()) {
+        /*
+         * Examples:
+         *
+         * A / B / 1
+         * 64sp
+         *
+         * SOS
+         * 48sp
+         *
+         * HELLO
+         * 48sp
+         *
+         * THANK YOU
+         * 40sp
+         *
+         * AR (End of message)
+         * 30sp
+         */
+
+        if (length <= 2) {
+
+            // Letters / numbers
+            txtLetter.setTextSize(64);
+
+        } else if (length <= 6) {
+
+            // Short words
+            txtLetter.setTextSize(48);
+
+        } else if (length <= 10) {
+
+            // Medium words
+            txtLetter.setTextSize(40);
+
+        } else {
+
+            // Prosigns and long descriptions
+            txtLetter.setTextSize(30);
+        }
+    }
+
+    // =========================================================
+    // PLAY SELECTED MORSE
+    // =========================================================
+
+    private void playSelectedMorse() {
+
+        if (selectedCategory == null ||
+                spinnerLetters.getSelectedItem() == null) {
+
+            return;
+        }
+
+        String entry =
+                spinnerLetters
+                        .getSelectedItem()
+                        .toString();
+
+        String code =
+                selectedCategory.get(entry);
+
+        if (code != null &&
+                !code.trim().isEmpty()) {
+
             playMorse(code);
         }
     }
 
+    // =========================================================
+    // MORSE PLAYBACK
+    // =========================================================
+
     private void playMorse(String code) {
+
         cancelPlayback();
 
-        if (code == null || code.trim().isEmpty()) return;
+        if (code == null ||
+                code.trim().isEmpty()) {
+
+            return;
+        }
 
         isPlaying = true;
         btnPlay.setText("Stop");
 
-        byte[] audioData = buildMorseAudio(code);
+        byte[] audioData =
+                buildMorseAudio(code);
+
         if (audioData.length == 0) {
+
             cancelPlayback();
             return;
         }
 
         try {
+
             audioTrack = new AudioTrack(
                     AudioManager.STREAM_MUSIC,
                     44100,
@@ -279,176 +435,474 @@ public class LearnActivity extends AppCompatActivity {
                     audioData.length,
                     AudioTrack.MODE_STATIC
             );
-            audioTrack.write(audioData, 0, audioData.length);
+
+            audioTrack.write(
+                    audioData,
+                    0,
+                    audioData.length
+            );
+
             audioTrack.play();
+
         } catch (Exception e) {
+
             releaseAudioTrack();
             cancelPlayback();
+
             return;
         }
 
         long delay = 0;
+
         for (char c : code.toCharArray()) {
+
             if (c == '.') {
-                scheduleSignal(delay, unitMs);
+
+                scheduleSignal(
+                        delay,
+                        unitMs
+                );
+
                 delay += unitMs * 2L;
+
             } else if (c == '-') {
-                scheduleSignal(delay, unitMs * 3);
+
+                scheduleSignal(
+                        delay,
+                        unitMs * 3
+                );
+
                 delay += unitMs * 4L;
+
             } else if (c == ' ') {
+
                 delay += unitMs * 2L;
             }
         }
 
         Runnable finishTask = () -> {
+
             setSignalVisual(false);
+
             releaseAudioTrack();
+
             isPlaying = false;
+
             btnPlay.setText("Play");
+
             playbackTasks.clear();
         };
-        postPlayback(finishTask, delay + 80L);
+
+        postPlayback(
+                finishTask,
+                delay + 80L
+        );
     }
 
-    private byte[] buildMorseAudio(String code) {
-        final int sampleRate = 44100;
-        int totalSamples = 0;
-        for (char c : code.toCharArray()) {
-            if (c == '.') totalSamples += msToSamples(unitMs * 2, sampleRate);
-            else if (c == '-') totalSamples += msToSamples(unitMs * 4, sampleRate);
-            else if (c == ' ') totalSamples += msToSamples(unitMs * 2, sampleRate);
-        }
-        totalSamples += msToSamples(30, sampleRate);
+    // =========================================================
+    // BUILD AUDIO
+    // =========================================================
 
-        short[] pcm = new short[Math.max(1, totalSamples)];
-        int position = 0;
+    private byte[] buildMorseAudio(String code) {
+
+        final int sampleRate = 44100;
+
+        int totalSamples = 0;
+
         for (char c : code.toCharArray()) {
-            if (c == '.' || c == '-') {
-                int toneMs = c == '.' ? unitMs : unitMs * 3;
-                int toneSamples = msToSamples(toneMs, sampleRate);
-                writeSmoothTone(pcm, position, toneSamples, sampleRate);
-                position += toneSamples + msToSamples(unitMs, sampleRate);
+
+            if (c == '.') {
+
+                totalSamples +=
+                        msToSamples(
+                                unitMs * 2,
+                                sampleRate
+                        );
+
+            } else if (c == '-') {
+
+                totalSamples +=
+                        msToSamples(
+                                unitMs * 4,
+                                sampleRate
+                        );
+
             } else if (c == ' ') {
-                position += msToSamples(unitMs * 2, sampleRate);
+
+                totalSamples +=
+                        msToSamples(
+                                unitMs * 2,
+                                sampleRate
+                        );
             }
         }
 
-        byte[] data = new byte[pcm.length * 2];
-        int index = 0;
-        for (short value : pcm) {
-            data[index++] = (byte) (value & 0xFF);
-            data[index++] = (byte) ((value >> 8) & 0xFF);
+        totalSamples +=
+                msToSamples(
+                        30,
+                        sampleRate
+                );
+
+        short[] pcm =
+                new short[
+                        Math.max(
+                                1,
+                                totalSamples
+                        )
+                        ];
+
+        int position = 0;
+
+        for (char c : code.toCharArray()) {
+
+            if (c == '.' || c == '-') {
+
+                int toneMs =
+                        c == '.'
+                                ? unitMs
+                                : unitMs * 3;
+
+                int toneSamples =
+                        msToSamples(
+                                toneMs,
+                                sampleRate
+                        );
+
+                writeSmoothTone(
+                        pcm,
+                        position,
+                        toneSamples,
+                        sampleRate
+                );
+
+                position +=
+                        toneSamples +
+                                msToSamples(
+                                        unitMs,
+                                        sampleRate
+                                );
+
+            } else if (c == ' ') {
+
+                position +=
+                        msToSamples(
+                                unitMs * 2,
+                                sampleRate
+                        );
+            }
         }
+
+        byte[] data =
+                new byte[pcm.length * 2];
+
+        int index = 0;
+
+        for (short value : pcm) {
+
+            data[index++] =
+                    (byte) (value & 0xFF);
+
+            data[index++] =
+                    (byte) ((value >> 8) & 0xFF);
+        }
+
         return data;
     }
 
-    private int msToSamples(int ms, int sampleRate) {
-        return Math.max(0, (int) Math.round(sampleRate * (ms / 1000.0)));
+    private int msToSamples(
+            int ms,
+            int sampleRate
+    ) {
+
+        return Math.max(
+                0,
+                (int) Math.round(
+                        sampleRate *
+                                (ms / 1000.0)
+                )
+        );
     }
 
-    private void writeSmoothTone(short[] buffer, int start, int length, int sampleRate) {
-        int safeFrequency = Math.max(100, frequency);
-        int fadeSamples = Math.min(msToSamples(5, sampleRate), Math.max(1, length / 2));
-        double phaseStep = 2.0 * Math.PI * safeFrequency / sampleRate;
-        for (int i = 0; i < length && start + i < buffer.length; i++) {
+    private void writeSmoothTone(
+            short[] buffer,
+            int start,
+            int length,
+            int sampleRate
+    ) {
+
+        int safeFrequency =
+                Math.max(
+                        100,
+                        frequency
+                );
+
+        int fadeSamples =
+                Math.min(
+                        msToSamples(
+                                5,
+                                sampleRate
+                        ),
+                        Math.max(
+                                1,
+                                length / 2
+                        )
+                );
+
+        double phaseStep =
+                2.0 *
+                        Math.PI *
+                        safeFrequency /
+                        sampleRate;
+
+        for (
+                int i = 0;
+                i < length &&
+                        start + i < buffer.length;
+                i++
+        ) {
+
             double envelope = 1.0;
-            if (i < fadeSamples) envelope = (double) i / fadeSamples;
-            else if (i >= length - fadeSamples) envelope = (double) (length - i - 1) / fadeSamples;
-            envelope = Math.max(0.0, Math.min(1.0, envelope));
-            buffer[start + i] = (short) (Math.sin(phaseStep * i) * 32767.0 * volume * envelope);
+
+            if (i < fadeSamples) {
+
+                envelope =
+                        (double) i /
+                                fadeSamples;
+
+            } else if (
+                    i >= length - fadeSamples
+            ) {
+
+                envelope =
+                        (double)
+                                (length - i - 1) /
+                                fadeSamples;
+            }
+
+            envelope =
+                    Math.max(
+                            0.0,
+                            Math.min(
+                                    1.0,
+                                    envelope
+                            )
+                    );
+
+            buffer[start + i] =
+                    (short) (
+                            Math.sin(
+                                    phaseStep * i
+                            ) *
+                                    32767.0 *
+                                    volume *
+                                    envelope
+                    );
         }
     }
 
+    // =========================================================
+    // AUDIO CLEANUP
+    // =========================================================
+
     private void releaseAudioTrack() {
+
         if (audioTrack != null) {
-            try { audioTrack.stop(); } catch (Exception ignored) {}
-            try { audioTrack.release(); } catch (Exception ignored) {}
+
+            try {
+                audioTrack.stop();
+            } catch (Exception ignored) {
+            }
+
+            try {
+                audioTrack.release();
+            } catch (Exception ignored) {
+            }
+
             audioTrack = null;
         }
     }
 
-    private void scheduleSignal(long startDelay, int duration) {
-        postPlayback(() -> setSignalVisual(true), startDelay);
-        postPlayback(() -> setSignalVisual(false), startDelay + duration);
+    // =========================================================
+    // FLASH / VISUAL SIGNAL
+    // =========================================================
+
+    private void scheduleSignal(
+            long startDelay,
+            int duration
+    ) {
+
+        postPlayback(
+                () -> setSignalVisual(true),
+                startDelay
+        );
+
+        postPlayback(
+                () -> setSignalVisual(false),
+                startDelay + duration
+        );
     }
 
-    private void setSignalVisual(boolean active) {
+    private void setSignalVisual(
+            boolean active
+    ) {
+
         setFlashlight(active);
+
         if (flashIndicator != null) {
-            flashIndicator.setBackgroundResource(active ? R.drawable.indicator_on : R.drawable.indicator_off);
+
+            flashIndicator.setBackgroundResource(
+                    active
+                            ? R.drawable.indicator_on
+                            : R.drawable.indicator_off
+            );
         }
     }
 
-    private void postPlayback(Runnable task, long delay) {
+    private void postPlayback(
+            Runnable task,
+            long delay
+    ) {
+
         playbackTasks.add(task);
-        handler.postDelayed(task, Math.max(0, delay));
+
+        handler.postDelayed(
+                task,
+                Math.max(
+                        0,
+                        delay
+                )
+        );
     }
 
     private void cancelPlayback() {
+
         for (Runnable task : playbackTasks) {
+
             handler.removeCallbacks(task);
         }
 
         playbackTasks.clear();
 
         stopSignal();
+
         isPlaying = false;
 
         if (btnPlay != null) {
+
             btnPlay.setText("Play");
         }
     }
 
-    // This uses the same tone generation as PracticeActivity.
     private void startSignal() {
+
         setSignalVisual(true);
     }
 
     private void stopSignal() {
+
         releaseAudioTrack();
+
         setSignalVisual(false);
     }
 
-    private void setFlashlight(boolean enabled) {
-        if (cameraManager == null || cameraId == null) {
+    private void setFlashlight(
+            boolean enabled
+    ) {
+
+        if (cameraManager == null ||
+                cameraId == null) {
+
             return;
         }
 
         try {
-            cameraManager.setTorchMode(cameraId, enabled && flashEnabled);
+
+            cameraManager.setTorchMode(
+                    cameraId,
+                    enabled && flashEnabled
+            );
+
         } catch (Exception ignored) {
         }
     }
 
+    // =========================================================
+    // SETTINGS
+    // =========================================================
+
     private void loadSettings() {
+
         SharedPreferences prefs =
-                getSharedPreferences("MorseSettings", MODE_PRIVATE);
+                getSharedPreferences(
+                        "MorseSettings",
+                        MODE_PRIVATE
+                );
 
-        frequency = prefs.getInt("frequency", 600);
-        int volInt = prefs.getInt("volume", 80);
-        volume = volInt / 100f;
-        wpm = prefs.getInt("speed", 20);
-        flashEnabled = prefs.getBoolean("flash_enabled", true);
+        frequency =
+                prefs.getInt(
+                        "frequency",
+                        600
+                );
 
-        unitMs = Math.max(20, 1200 / Math.max(5, wpm));
+        int volInt =
+                prefs.getInt(
+                        "volume",
+                        80
+                );
+
+        volume =
+                volInt / 100f;
+
+        wpm =
+                prefs.getInt(
+                        "speed",
+                        20
+                );
+
+        flashEnabled =
+                prefs.getBoolean(
+                        "flash_enabled",
+                        true
+                );
+
+        unitMs =
+                Math.max(
+                        20,
+                        1200 /
+                                Math.max(
+                                        5,
+                                        wpm
+                                )
+                );
     }
+
+    // =========================================================
+    // ACTIVITY LIFECYCLE
+    // =========================================================
 
     @Override
     protected void onResume() {
+
         super.onResume();
+
         loadSettings();
     }
 
     @Override
     protected void onPause() {
+
         cancelPlayback();
+
         super.onPause();
     }
 
     @Override
     protected void onDestroy() {
+
         handler.removeCallbacksAndMessages(null);
+
         stopSignal();
+
         super.onDestroy();
     }
 }

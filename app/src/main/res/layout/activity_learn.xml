@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <androidx.constraintlayout.widget.ConstraintLayout
-    android:fitsSystemWindows="true"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
     android:background="@drawable/main_background"
     tools:context=".LearnActivity">
 
@@ -20,6 +20,8 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="22dp">
+
+            <!-- BACK -->
 
             <TextView
                 android:id="@+id/btnBack"
@@ -35,7 +37,6 @@
                 android:focusable="true"
                 android:contentDescription="Back"/>
 
-
             <!-- HEADER -->
 
             <TextView
@@ -45,7 +46,7 @@
                 android:textColor="#FFB84D"
                 android:textSize="12sp"
                 android:textStyle="bold"
-                android:letterSpacing="0.18" />
+                android:letterSpacing="0.18"/>
 
             <TextView
                 android:layout_width="wrap_content"
@@ -54,7 +55,7 @@
                 android:text="Learn the language"
                 android:textColor="#FFFFFF"
                 android:textSize="29sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"/>
 
             <TextView
                 android:layout_width="match_parent"
@@ -63,9 +64,9 @@
                 android:layout_marginBottom="18dp"
                 android:text="Explore a signal and hear how it sounds."
                 android:textColor="#A7B1C2"
-                android:textSize="14sp" />
+                android:textSize="14sp"/>
 
-            <!-- SIGNAL SET CARD -->
+            <!-- SIGNAL SELECTION -->
 
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
@@ -89,9 +90,9 @@
                         android:textColor="#FFFFFF"
                         android:textSize="10sp"
                         android:textStyle="bold"
-                        android:letterSpacing="0.14" />
+                        android:letterSpacing="0.14"/>
 
-                    <!-- CATEGORY: LETTERS, NUMBERS, WORDS -->
+                    <!-- CATEGORY -->
 
                     <Spinner
                         android:id="@+id/spinnerCategory"
@@ -101,9 +102,9 @@
                         android:layout_marginBottom="8dp"
                         android:spinnerMode="dropdown"
                         android:theme="@style/ThemeOverlay.Material3.Dark"
-                        android:popupBackground="#171C27" />
+                        android:popupBackground="#171C27"/>
 
-                    <!-- LETTER SELECTION -->
+                    <!-- SIGNAL -->
 
                     <Spinner
                         android:id="@+id/spinnerLetters"
@@ -111,13 +112,13 @@
                         android:layout_height="48dp"
                         android:spinnerMode="dropdown"
                         android:theme="@style/ThemeOverlay.Material3.Dark"
-                        android:popupBackground="#171C27" />
+                        android:popupBackground="#171C27"/>
 
                 </LinearLayout>
 
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- SIGNAL DISPLAY -->
+            <!-- CURRENT SIGNAL CARD -->
 
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
@@ -141,35 +142,50 @@
                         android:textColor="#A7B1C2"
                         android:textSize="10sp"
                         android:textStyle="bold"
-                        android:letterSpacing="0.15" />
+                        android:letterSpacing="0.15"/>
+
+                    <!--
+                        Automatically resized in LearnActivity:
+                        Letters/numbers = 64sp
+                        Short words = 48sp
+                        Medium words = 40sp
+                        Prosign descriptions = 30sp
+                    -->
 
                     <TextView
                         android:id="@+id/txtLetter"
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="5dp"
+                        android:layout_marginTop="10dp"
+                        android:gravity="center"
+                        android:maxLines="2"
                         android:text="A"
+                        android:textAlignment="center"
                         android:textColor="#FFFFFF"
-                        android:textSize="76sp"
-                        android:textStyle="bold" />
+                        android:textSize="64sp"
+                        android:textStyle="bold"/>
+
+                    <!-- MORSE CODE -->
 
                     <TextView
                         android:id="@+id/txtMorse"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="-5dp"
+                        android:layout_marginTop="2dp"
                         android:layout_marginBottom="22dp"
                         android:text=".-"
                         android:textColor="#FFB84D"
-                        android:textSize="44sp"
+                        android:textSize="38sp"
                         android:textStyle="bold"
-                        android:letterSpacing="0.15" />
+                        android:letterSpacing="0.15"/>
+
+                    <!-- FLASH INDICATOR -->
 
                     <View
                         android:id="@+id/flashIndicator"
                         android:layout_width="76dp"
                         android:layout_height="76dp"
-                        android:background="@drawable/indicator_off" />
+                        android:background="@drawable/indicator_off"/>
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -178,13 +194,13 @@
                         android:text="LISTEN TO THE SIGNAL"
                         android:textColor="#A7B1C2"
                         android:textSize="10sp"
-                        android:letterSpacing="0.12" />
+                        android:letterSpacing="0.12"/>
 
                 </LinearLayout>
 
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- PLAY BUTTON -->
+            <!-- PLAY -->
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnPlay"
@@ -197,7 +213,7 @@
                 android:textStyle="bold"
                 android:background="@drawable/btn_library_bg"
                 app:backgroundTint="@null"
-                app:cornerRadius="20dp" />
+                app:cornerRadius="20dp"/>
 
         </LinearLayout>
 
