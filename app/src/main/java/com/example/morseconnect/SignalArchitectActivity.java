@@ -2,6 +2,9 @@ package com.example.morseconnect;
 
 import android.content.SharedPreferences;
 import android.hardware.camera2.CameraManager;
+import android.media.AudioFormat;
+import android.media.AudioManager;
+import android.media.AudioTrack;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -61,6 +64,11 @@ public class SignalArchitectActivity extends AppCompatActivity {
     private String cameraId;
     private boolean flashEnabled = true;
     private int flashUnitMs = 60;
+
+    // Morse sound settings shared with SettingsActivity.
+    private int signalFrequency = 600;
+    private float signalVolume = 0.8f;
+    private AudioTrack audioTrack;
 
     private final Handler signalHandler =
             new Handler(Looper.getMainLooper());
@@ -189,11 +197,25 @@ public class SignalArchitectActivity extends AppCompatActivity {
 
         bindViews();
 
-        cameraManager = (CameraManager) getSystemService(CAMERA_SERVICE);
+        cameraManager =
+                (CameraManager)
+                        getSystemService(
+                                CAMERA_SERVICE
+                        );
+
         try {
-            String[] ids = cameraManager.getCameraIdList();
-            cameraId = ids.length > 0 ? ids[0] : null;
+
+            String[] ids =
+                    cameraManager
+                            .getCameraIdList();
+
+            cameraId =
+                    ids.length > 0
+                            ? ids[0]
+                            : null;
+
         } catch (Exception ignored) {
+
             cameraId = null;
         }
 
@@ -215,44 +237,71 @@ public class SignalArchitectActivity extends AppCompatActivity {
     private void bindViews() {
 
         txtRound =
-                findViewById(R.id.txtRound);
+                findViewById(
+                        R.id.txtRound
+                );
 
         txtTime =
-                findViewById(R.id.txtTime);
+                findViewById(
+                        R.id.txtTime
+                );
 
         txtMmr =
-                findViewById(R.id.txtMmr);
+                findViewById(
+                        R.id.txtMmr
+                );
 
         txtCorrect =
-                findViewById(R.id.txtCorrect);
+                findViewById(
+                        R.id.txtCorrect
+                );
 
         txtSignal =
-                findViewById(R.id.txtSignal);
+                findViewById(
+                        R.id.txtSignal
+                );
 
         txtFeedback =
-                findViewById(R.id.txtFeedback);
+                findViewById(
+                        R.id.txtFeedback
+                );
 
         txtCombo =
-                findViewById(R.id.txtCombo);
+                findViewById(
+                        R.id.txtCombo
+                );
 
         txtProfileStats =
-                findViewById(R.id.txtProfileStats);
+                findViewById(
+                        R.id.txtProfileStats
+                );
 
         networkMap =
-                findViewById(R.id.networkMap);
+                findViewById(
+                        R.id.networkMap
+                );
 
         answerButtons =
                 new Button[]{
-                        findViewById(R.id.btnAnswer1),
-                        findViewById(R.id.btnAnswer2),
-                        findViewById(R.id.btnAnswer3),
-                        findViewById(R.id.btnAnswer4)
+                        findViewById(
+                                R.id.btnAnswer1
+                        ),
+                        findViewById(
+                                R.id.btnAnswer2
+                        ),
+                        findViewById(
+                                R.id.btnAnswer3
+                        ),
+                        findViewById(
+                                R.id.btnAnswer4
+                        )
                 };
 
-        findViewById(R.id.btnExit)
-                .setOnClickListener(
-                        v -> finish()
-                );
+        findViewById(
+                R.id.btnExit
+        ).setOnClickListener(
+                v -> finish()
+        );
     }
 
     // ------------------------------------------------
@@ -368,7 +417,9 @@ public class SignalArchitectActivity extends AppCompatActivity {
 
                                 showReadyDialog();
 
-                            } catch (Exception e) {
+                            } catch (
+                                    Exception e
+                            ) {
 
                                 Toast.makeText(
                                         this,
@@ -382,7 +433,9 @@ public class SignalArchitectActivity extends AppCompatActivity {
 
                             if (
                                     error.networkResponse != null &&
-                                            error.networkResponse.statusCode == 401
+                                            error.networkResponse
+                                                    .statusCode ==
+                                                    401
                             ) {
 
                                 showSessionError();
@@ -399,7 +452,8 @@ public class SignalArchitectActivity extends AppCompatActivity {
                 ) {
 
                     @Override
-                    public Map<String, String> getHeaders() {
+                    public Map<String, String>
+                    getHeaders() {
 
                         return buildHeaders();
                     }
@@ -413,7 +467,9 @@ public class SignalArchitectActivity extends AppCompatActivity {
                 )
         );
 
-        requestQueue.add(request);
+        requestQueue.add(
+                request
+        );
     }
 
     // ------------------------------------------------
@@ -461,8 +517,7 @@ public class SignalArchitectActivity extends AppCompatActivity {
                 timerRunnable
         );
 
-        signalHandler.removeCallbacksAndMessages(null);
-        setTorch(false);
+        stopMorseSignal();
 
         correct = 0;
         combo = 0;
@@ -475,7 +530,9 @@ public class SignalArchitectActivity extends AppCompatActivity {
 
         deckPosition = 0;
 
-        txtFeedback.setText("");
+        txtFeedback.setText(
+                ""
+        );
 
         txtCombo.setText(
                 "COMBO x0"
@@ -487,7 +544,9 @@ public class SignalArchitectActivity extends AppCompatActivity {
 
         if (networkMap != null) {
 
-            networkMap.setCorrect(0);
+            networkMap.setCorrect(
+                    0
+            );
         }
 
         handler.postDelayed(
@@ -519,17 +578,25 @@ public class SignalArchitectActivity extends AppCompatActivity {
         }
 
         ArrayList<String> pool =
-                getPoolForRound(round);
+                getPoolForRound(
+                        round
+                );
 
         if (
                 questionDeck.isEmpty() ||
-                        deckPosition >= questionDeck.size() ||
-                        !questionDeck.containsAll(pool)
+                        deckPosition >=
+                                questionDeck.size() ||
+                        !questionDeck
+                                .containsAll(
+                                        pool
+                                )
         ) {
 
             questionDeck.clear();
 
-            questionDeck.addAll(pool);
+            questionDeck.addAll(
+                    pool
+            );
 
             Collections.shuffle(
                     questionDeck
@@ -544,8 +611,11 @@ public class SignalArchitectActivity extends AppCompatActivity {
                 );
 
         if (
-                next.equals(previousAnswer) &&
-                        questionDeck.size() > 1
+                next.equals(
+                        previousAnswer
+                ) &&
+                        questionDeck.size() >
+                                1
         ) {
 
             Collections.swap(
@@ -561,7 +631,8 @@ public class SignalArchitectActivity extends AppCompatActivity {
                     );
         }
 
-        currentAnswer = next;
+        currentAnswer =
+                next;
 
         previousAnswer =
                 currentAnswer;
@@ -580,7 +651,9 @@ public class SignalArchitectActivity extends AppCompatActivity {
                         correct
         );
 
-        txtFeedback.setText("");
+        txtFeedback.setText(
+                ""
+        );
 
         String currentMorse =
                 getMorse(
@@ -591,7 +664,7 @@ public class SignalArchitectActivity extends AppCompatActivity {
                 currentMorse
         );
 
-        playFlashMorse(
+        playMorseSignal(
                 currentMorse
         );
 
@@ -610,7 +683,8 @@ public class SignalArchitectActivity extends AppCompatActivity {
         );
 
         while (
-                choices.size() < 4
+                choices.size() <
+                        4
         ) {
 
             String option =
@@ -621,10 +695,14 @@ public class SignalArchitectActivity extends AppCompatActivity {
                     );
 
             if (
-                    used.add(option)
+                    used.add(
+                            option
+                    )
             ) {
 
-                choices.add(option);
+                choices.add(
+                        option
+                );
             }
         }
 
@@ -634,7 +712,8 @@ public class SignalArchitectActivity extends AppCompatActivity {
 
         for (
                 int i = 0;
-                i < answerButtons.length;
+                i <
+                        answerButtons.length;
                 i++
         ) {
 
@@ -642,10 +721,14 @@ public class SignalArchitectActivity extends AppCompatActivity {
                     answerButtons[i];
 
             button.setText(
-                    choices.get(i)
+                    choices.get(
+                            i
+                    )
             );
 
-            button.setEnabled(true);
+            button.setEnabled(
+                    true
+            );
 
             button.setOnClickListener(
                     v ->
@@ -662,7 +745,8 @@ public class SignalArchitectActivity extends AppCompatActivity {
     // QUESTION POOL
     // ------------------------------------------------
 
-    private ArrayList<String> getPoolForRound(
+    private ArrayList<String>
+    getPoolForRound(
             int round
     ) {
 
@@ -673,18 +757,26 @@ public class SignalArchitectActivity extends AppCompatActivity {
 
             Collections.addAll(
                     pool,
-                    "E", "T", "A",
-                    "I", "N", "M"
+                    "E",
+                    "T",
+                    "A",
+                    "I",
+                    "N",
+                    "M"
             );
 
-        } else if (round <= 10) {
+        } else if (
+                round <= 10
+        ) {
 
             Collections.addAll(
                     pool,
                     letters
             );
 
-        } else if (round <= 15) {
+        } else if (
+                round <= 15
+        ) {
 
             Collections.addAll(
                     pool,
@@ -735,7 +827,9 @@ public class SignalArchitectActivity extends AppCompatActivity {
 
             if (
                     letters[i]
-                            .equals(character)
+                            .equals(
+                                    character
+                            )
             ) {
 
                 index = i;
@@ -746,7 +840,9 @@ public class SignalArchitectActivity extends AppCompatActivity {
 
         if (index >= 0) {
 
-            return morse[index];
+            return morse[
+                    index
+                    ];
         }
 
         for (
@@ -757,24 +853,30 @@ public class SignalArchitectActivity extends AppCompatActivity {
 
             if (
                     numbers[i]
-                            .equals(character)
+                            .equals(
+                                    character
+                            )
             ) {
 
                 return morse[
-                        letters.length + i
+                        letters.length +
+                                i
                         ];
             }
         }
 
         for (
                 int i = 0;
-                i < punctuation.length;
+                i <
+                        punctuation.length;
                 i++
         ) {
 
             if (
                     punctuation[i]
-                            .equals(character)
+                            .equals(
+                                    character
+                            )
             ) {
 
                 return morse[
@@ -845,7 +947,8 @@ public class SignalArchitectActivity extends AppCompatActivity {
 
                 Toast.makeText(
                         this,
-                        combo + " STREAK!",
+                        combo +
+                                " STREAK!",
                         Toast.LENGTH_SHORT
                 ).show();
             }
@@ -899,8 +1002,7 @@ public class SignalArchitectActivity extends AppCompatActivity {
                 timerRunnable
         );
 
-        signalHandler.removeCallbacksAndMessages(null);
-        setTorch(false);
+        stopMorseSignal();
 
         disableAnswerButtons();
 
@@ -933,15 +1035,15 @@ public class SignalArchitectActivity extends AppCompatActivity {
                 timerRunnable
         );
 
-        signalHandler.removeCallbacksAndMessages(null);
-        setTorch(false);
+        stopMorseSignal();
 
         disableAnswerButtons();
 
         int questionNumber =
                 Math.min(
                         TARGET,
-                        correct + 1
+                        correct +
+                                1
                 );
 
         submitMatchResult(
@@ -988,7 +1090,9 @@ public class SignalArchitectActivity extends AppCompatActivity {
             );
 
             if (
-                    result.equals("win")
+                    result.equals(
+                            "win"
+                    )
             ) {
 
                 body.put(
@@ -1004,7 +1108,9 @@ public class SignalArchitectActivity extends AppCompatActivity {
                 );
             }
 
-        } catch (JSONException e) {
+        } catch (
+                JSONException e
+        ) {
 
             submittingResult = false;
 
@@ -1052,7 +1158,9 @@ public class SignalArchitectActivity extends AppCompatActivity {
                                             "stats"
                                     );
 
-                            if (stats == null) {
+                            if (
+                                    stats == null
+                            ) {
 
                                 Toast.makeText(
                                         this,
@@ -1074,7 +1182,9 @@ public class SignalArchitectActivity extends AppCompatActivity {
                                     );
 
                             if (
-                                    result.equals("win")
+                                    result.equals(
+                                            "win"
+                                    )
                             ) {
 
                                 showWinDialog(
@@ -1091,11 +1201,15 @@ public class SignalArchitectActivity extends AppCompatActivity {
 
                         error -> {
 
-                            submittingResult = false;
+                            submittingResult =
+                                    false;
 
                             if (
-                                    error.networkResponse != null &&
-                                            error.networkResponse.statusCode == 401
+                                    error.networkResponse !=
+                                            null &&
+                                            error.networkResponse
+                                                    .statusCode ==
+                                                    401
                             ) {
 
                                 showSessionError();
@@ -1111,17 +1225,24 @@ public class SignalArchitectActivity extends AppCompatActivity {
                              * the database remains the authority.
                              */
 
-                            new AlertDialog.Builder(this)
+                            new AlertDialog.Builder(
+                                    this
+                            )
                                     .setTitle(
                                             "RESULT NOT SAVED"
                                     )
                                     .setMessage(
                                             "MorseConnect couldn't save this match result. Check your connection and try again."
                                     )
-                                    .setCancelable(false)
+                                    .setCancelable(
+                                            false
+                                    )
                                     .setPositiveButton(
                                             "BACK",
-                                            (dialog, which) ->
+                                            (
+                                                    dialog,
+                                                    which
+                                            ) ->
                                                     finish()
                                     )
                                     .show();
@@ -1129,7 +1250,8 @@ public class SignalArchitectActivity extends AppCompatActivity {
                 ) {
 
                     @Override
-                    public Map<String, String> getHeaders() {
+                    public Map<String, String>
+                    getHeaders() {
 
                         return buildHeaders();
                     }
@@ -1275,7 +1397,9 @@ public class SignalArchitectActivity extends AppCompatActivity {
             int mmrChange
     ) {
 
-        new AlertDialog.Builder(this)
+        new AlertDialog.Builder(
+                this
+        )
                 .setTitle(
                         "NETWORK RESTORED!"
                 )
@@ -1294,15 +1418,23 @@ public class SignalArchitectActivity extends AppCompatActivity {
                                 "\nNew rating: " +
                                 serverMmr
                 )
-                .setCancelable(false)
+                .setCancelable(
+                        false
+                )
                 .setPositiveButton(
                         "PLAY AGAIN",
-                        (dialog, which) ->
+                        (
+                                dialog,
+                                which
+                        ) ->
                                 startGame()
                 )
                 .setNegativeButton(
                         "BACK",
-                        (dialog, which) ->
+                        (
+                                dialog,
+                                which
+                        ) ->
                                 finish()
                 )
                 .show();
@@ -1316,7 +1448,9 @@ public class SignalArchitectActivity extends AppCompatActivity {
             int mmrChange
     ) {
 
-        new AlertDialog.Builder(this)
+        new AlertDialog.Builder(
+                this
+        )
                 .setTitle(
                         "TRANSMISSION LOST"
                 )
@@ -1335,15 +1469,23 @@ public class SignalArchitectActivity extends AppCompatActivity {
                                 "\nNew rating: " +
                                 serverMmr
                 )
-                .setCancelable(false)
+                .setCancelable(
+                        false
+                )
                 .setPositiveButton(
                         "TRY AGAIN",
-                        (dialog, which) ->
+                        (
+                                dialog,
+                                which
+                        ) ->
                                 startGame()
                 )
                 .setNegativeButton(
                         "BACK",
-                        (dialog, which) ->
+                        (
+                                dialog,
+                                which
+                        ) ->
                                 finish()
                 )
                 .show();
@@ -1355,7 +1497,9 @@ public class SignalArchitectActivity extends AppCompatActivity {
 
     private void showReadyDialog() {
 
-        new AlertDialog.Builder(this)
+        new AlertDialog.Builder(
+                this
+        )
                 .setTitle(
                         "READY, ARCHITECT?"
                 )
@@ -1364,15 +1508,23 @@ public class SignalArchitectActivity extends AppCompatActivity {
                                 serverMmr +
                                 "\n\nYou have 20 rounds. One mistake ends your run."
                 )
-                .setCancelable(false)
+                .setCancelable(
+                        false
+                )
                 .setPositiveButton(
                         "START",
-                        (dialog, which) ->
+                        (
+                                dialog,
+                                which
+                        ) ->
                                 beginCountdown()
                 )
                 .setNegativeButton(
                         "BACK",
-                        (dialog, which) ->
+                        (
+                                dialog,
+                                which
+                        ) ->
                                 finish()
                 )
                 .show();
@@ -1389,14 +1541,18 @@ public class SignalArchitectActivity extends AppCompatActivity {
         };
 
         countdownDialog =
-                new AlertDialog.Builder(this)
+                new AlertDialog.Builder(
+                        this
+                )
                         .setTitle(
                                 "GET READY"
                         )
                         .setMessage(
                                 "Starting in 3..."
                         )
-                        .setCancelable(false)
+                        .setCancelable(
+                                false
+                        )
                         .create();
 
         countdownDialog.show();
@@ -1416,7 +1572,8 @@ public class SignalArchitectActivity extends AppCompatActivity {
                         }
 
                         if (
-                                count[0] > 0
+                                count[0] >
+                                        0
                         ) {
 
                             countdownDialog
@@ -1437,9 +1594,11 @@ public class SignalArchitectActivity extends AppCompatActivity {
 
                             countdownDialog.dismiss();
 
-                            countdownDialog = null;
+                            countdownDialog =
+                                    null;
 
-                            countdownRunnable = null;
+                            countdownRunnable =
+                                    null;
 
                             startGame();
                         }
@@ -1455,7 +1614,8 @@ public class SignalArchitectActivity extends AppCompatActivity {
     // HEADERS
     // ------------------------------------------------
 
-    private Map<String, String> buildHeaders() {
+    private Map<String, String>
+    buildHeaders() {
 
         Map<String, String> headers =
                 new HashMap<>();
@@ -1492,6 +1652,7 @@ public class SignalArchitectActivity extends AppCompatActivity {
                 );
 
         if (token == null) {
+
             return "";
         }
 
@@ -1504,17 +1665,24 @@ public class SignalArchitectActivity extends AppCompatActivity {
 
     private void showSessionError() {
 
-        new AlertDialog.Builder(this)
+        new AlertDialog.Builder(
+                this
+        )
                 .setTitle(
                         "LOGIN REQUIRED"
                 )
                 .setMessage(
                         "Your login session is missing or expired. Please log in again."
                 )
-                .setCancelable(false)
+                .setCancelable(
+                        false
+                )
                 .setPositiveButton(
                         "OK",
-                        (dialog, which) ->
+                        (
+                                dialog,
+                                which
+                        ) ->
                                 finish()
                 )
                 .show();
@@ -1531,7 +1699,9 @@ public class SignalArchitectActivity extends AppCompatActivity {
                 answerButtons
         ) {
 
-            button.setEnabled(false);
+            button.setEnabled(
+                    false
+            );
         }
     }
 
@@ -1560,73 +1730,580 @@ public class SignalArchitectActivity extends AppCompatActivity {
         );
     }
 
-
     // ------------------------------------------------
-    // GLOBAL FLASHLIGHT SETTING
+    // GLOBAL MORSE SIGNAL SETTINGS
     // ------------------------------------------------
 
     private void loadSignalSettings() {
-        SharedPreferences prefs =
-                getSharedPreferences("MorseSettings", MODE_PRIVATE);
 
-        flashEnabled = prefs.getBoolean("flash_enabled", true);
-        int wpm = prefs.getInt("speed", 20);
-        flashUnitMs = Math.max(20, 1200 / Math.max(5, wpm));
+        SharedPreferences prefs =
+                getSharedPreferences(
+                        "MorseSettings",
+                        MODE_PRIVATE
+                );
+
+        signalFrequency =
+                prefs.getInt(
+                        "frequency",
+                        600
+                );
+
+        int volumePercent =
+                prefs.getInt(
+                        "volume",
+                        80
+                );
+
+        int wpm =
+                prefs.getInt(
+                        "speed",
+                        20
+                );
+
+        flashEnabled =
+                prefs.getBoolean(
+                        "flash_enabled",
+                        true
+                );
+
+        signalFrequency =
+                Math.max(
+                        200,
+                        Math.min(
+                                signalFrequency,
+                                1200
+                        )
+                );
+
+        volumePercent =
+                Math.max(
+                        0,
+                        Math.min(
+                                volumePercent,
+                                100
+                        )
+                );
+
+        signalVolume =
+                volumePercent /
+                        100f;
+
+        // Standard Morse timing:
+        // one dot unit = 1200 / WPM milliseconds.
+        flashUnitMs =
+                Math.max(
+                        20,
+                        1200 /
+                                Math.max(
+                                        5,
+                                        wpm
+                                )
+                );
 
         if (!flashEnabled) {
-            setTorch(false);
+
+            setTorch(
+                    false
+            );
         }
     }
 
-    private void playFlashMorse(String code) {
-        signalHandler.removeCallbacksAndMessages(null);
-        setTorch(false);
+    // ------------------------------------------------
+    // PLAY MORSE SOUND + FLASH TOGETHER
+    // ------------------------------------------------
 
-        if (!flashEnabled || code == null || code.trim().isEmpty()) {
+    private void playMorseSignal(
+            String code
+    ) {
+
+        stopMorseSignal();
+
+        if (
+                code == null ||
+                        code.trim()
+                                .isEmpty()
+        ) {
+
             return;
         }
 
-        long delay = 0L;
+        // Build one PCM buffer for the complete Morse pattern.
+        if (
+                signalVolume >
+                        0f
+        ) {
 
-        for (char c : code.toCharArray()) {
-            if (c == '.' || c == '-') {
-                int duration = c == '.' ? flashUnitMs : flashUnitMs * 3;
-                long onAt = delay;
-                long offAt = delay + duration;
+            byte[] audioData =
+                    buildMorseAudio(
+                            code
+                    );
 
-                signalHandler.postDelayed(() -> setTorch(true), onAt);
-                signalHandler.postDelayed(() -> setTorch(false), offAt);
+            if (
+                    audioData.length >
+                            0
+            ) {
 
-                delay += duration + flashUnitMs;
-            } else if (c == ' ') {
-                delay += flashUnitMs * 2L;
+                try {
+
+                    audioTrack =
+                            new AudioTrack(
+                                    AudioManager.STREAM_MUSIC,
+                                    44100,
+                                    AudioFormat.CHANNEL_OUT_MONO,
+                                    AudioFormat.ENCODING_PCM_16BIT,
+                                    audioData.length,
+                                    AudioTrack.MODE_STATIC
+                            );
+
+                    audioTrack.write(
+                            audioData,
+                            0,
+                            audioData.length
+                    );
+
+                    audioTrack.play();
+
+                } catch (
+                        Exception ignored
+                ) {
+
+                    releaseAudioTrack();
+                }
             }
         }
 
-        signalHandler.postDelayed(() -> setTorch(false), delay + 50L);
+        // Keep existing flashlight behavior.
+        if (flashEnabled) {
+
+            long delay =
+                    0L;
+
+            for (
+                    char c :
+                    code.toCharArray()
+            ) {
+
+                if (
+                        c == '.' ||
+                                c == '-'
+                ) {
+
+                    int duration =
+                            c == '.'
+                                    ? flashUnitMs
+                                    : flashUnitMs *
+                                    3;
+
+                    long onAt =
+                            delay;
+
+                    long offAt =
+                            delay +
+                                    duration;
+
+                    signalHandler
+                            .postDelayed(
+                                    () ->
+                                            setTorch(
+                                                    true
+                                            ),
+                                    onAt
+                            );
+
+                    signalHandler
+                            .postDelayed(
+                                    () ->
+                                            setTorch(
+                                                    false
+                                            ),
+                                    offAt
+                            );
+
+                    delay +=
+                            duration +
+                                    flashUnitMs;
+
+                } else if (
+                        c == ' '
+                ) {
+
+                    delay +=
+                            flashUnitMs *
+                                    2L;
+                }
+            }
+
+            signalHandler.postDelayed(
+                    () ->
+                            setTorch(
+                                    false
+                            ),
+                    delay +
+                            50L
+            );
+        }
     }
 
-    private void setTorch(boolean enabled) {
-        if (cameraManager == null || cameraId == null) {
+    // ------------------------------------------------
+    // BUILD MORSE AUDIO
+    // ------------------------------------------------
+
+    private byte[] buildMorseAudio(
+            String code
+    ) {
+
+        final int sampleRate =
+                44100;
+
+        int totalSamples =
+                0;
+
+        for (
+                char c :
+                code.toCharArray()
+        ) {
+
+            if (
+                    c == '.'
+            ) {
+
+                totalSamples +=
+                        msToSamples(
+                                flashUnitMs *
+                                        2,
+                                sampleRate
+                        );
+
+            } else if (
+                    c == '-'
+            ) {
+
+                totalSamples +=
+                        msToSamples(
+                                flashUnitMs *
+                                        4,
+                                sampleRate
+                        );
+
+            } else if (
+                    c == ' '
+            ) {
+
+                totalSamples +=
+                        msToSamples(
+                                flashUnitMs *
+                                        2,
+                                sampleRate
+                        );
+            }
+        }
+
+        totalSamples +=
+                msToSamples(
+                        30,
+                        sampleRate
+                );
+
+        short[] pcm =
+                new short[
+                        Math.max(
+                                1,
+                                totalSamples
+                        )
+                        ];
+
+        int position =
+                0;
+
+        for (
+                char c :
+                code.toCharArray()
+        ) {
+
+            if (
+                    c == '.' ||
+                            c == '-'
+            ) {
+
+                int toneMs =
+                        c == '.'
+                                ? flashUnitMs
+                                : flashUnitMs *
+                                3;
+
+                int toneSamples =
+                        msToSamples(
+                                toneMs,
+                                sampleRate
+                        );
+
+                writeSmoothTone(
+                        pcm,
+                        position,
+                        toneSamples,
+                        sampleRate
+                );
+
+                position +=
+                        toneSamples +
+                                msToSamples(
+                                        flashUnitMs,
+                                        sampleRate
+                                );
+
+            } else if (
+                    c == ' '
+            ) {
+
+                position +=
+                        msToSamples(
+                                flashUnitMs *
+                                        2,
+                                sampleRate
+                        );
+            }
+        }
+
+        byte[] data =
+                new byte[
+                        pcm.length *
+                                2
+                        ];
+
+        int index =
+                0;
+
+        for (
+                short value :
+                pcm
+        ) {
+
+            data[index++] =
+                    (byte) (
+                            value &
+                                    0xFF
+                    );
+
+            data[index++] =
+                    (byte) (
+                            (
+                                    value >>
+                                            8
+                            ) &
+                                    0xFF
+                    );
+        }
+
+        return data;
+    }
+
+    private int msToSamples(
+            int ms,
+            int sampleRate
+    ) {
+
+        return Math.max(
+                0,
+                (int)
+                        Math.round(
+                                sampleRate *
+                                        (
+                                                ms /
+                                                        1000.0
+                                        )
+                        )
+        );
+    }
+
+    private void writeSmoothTone(
+            short[] buffer,
+            int start,
+            int length,
+            int sampleRate
+    ) {
+
+        int safeFrequency =
+                Math.max(
+                        100,
+                        signalFrequency
+                );
+
+        int fadeSamples =
+                Math.min(
+                        msToSamples(
+                                5,
+                                sampleRate
+                        ),
+                        Math.max(
+                                1,
+                                length /
+                                        2
+                        )
+                );
+
+        double phaseStep =
+                2.0 *
+                        Math.PI *
+                        safeFrequency /
+                        sampleRate;
+
+        for (
+                int i = 0;
+                i < length &&
+                        start + i <
+                                buffer.length;
+                i++
+        ) {
+
+            double envelope =
+                    1.0;
+
+            if (
+                    i <
+                            fadeSamples
+            ) {
+
+                envelope =
+                        (double) i /
+                                fadeSamples;
+
+            } else if (
+                    i >=
+                            length -
+                                    fadeSamples
+            ) {
+
+                envelope =
+                        (double) (
+                                length -
+                                        i -
+                                        1
+                        ) /
+                                fadeSamples;
+            }
+
+            envelope =
+                    Math.max(
+                            0.0,
+                            Math.min(
+                                    1.0,
+                                    envelope
+                            )
+                    );
+
+            buffer[
+                    start + i
+                    ] =
+                    (short) (
+                            Math.sin(
+                                    phaseStep *
+                                            i
+                            ) *
+                                    32767.0 *
+                                    signalVolume *
+                                    envelope
+                    );
+        }
+    }
+
+    // ------------------------------------------------
+    // STOP / RELEASE SIGNAL PLAYBACK
+    // ------------------------------------------------
+
+    private void stopMorseSignal() {
+
+        signalHandler
+                .removeCallbacksAndMessages(
+                        null
+                );
+
+        setTorch(
+                false
+        );
+
+        releaseAudioTrack();
+    }
+
+    private void releaseAudioTrack() {
+
+        if (
+                audioTrack != null
+        ) {
+
+            try {
+
+                audioTrack.stop();
+
+            } catch (
+                    Exception ignored
+            ) {
+            }
+
+            try {
+
+                audioTrack.release();
+
+            } catch (
+                    Exception ignored
+            ) {
+            }
+
+            audioTrack =
+                    null;
+        }
+    }
+
+    // ------------------------------------------------
+    // FLASHLIGHT
+    // ------------------------------------------------
+
+    private void setTorch(
+            boolean enabled
+    ) {
+
+        if (
+                cameraManager == null ||
+                        cameraId == null
+        ) {
+
             return;
         }
 
         try {
-            cameraManager.setTorchMode(cameraId, enabled && flashEnabled);
-        } catch (Exception ignored) {
+
+            cameraManager.setTorchMode(
+                    cameraId,
+                    enabled &&
+                            flashEnabled
+            );
+
+        } catch (
+                Exception ignored
+        ) {
         }
     }
 
+    // ------------------------------------------------
+    // RESUME
+    // ------------------------------------------------
+
     @Override
     protected void onResume() {
+
         super.onResume();
+
         loadSignalSettings();
     }
 
+    // ------------------------------------------------
+    // PAUSE
+    // ------------------------------------------------
+
     @Override
     protected void onPause() {
-        signalHandler.removeCallbacksAndMessages(null);
-        setTorch(false);
+
+        stopMorseSignal();
+
         super.onPause();
     }
 
@@ -1641,8 +2318,7 @@ public class SignalArchitectActivity extends AppCompatActivity {
                 timerRunnable
         );
 
-        signalHandler.removeCallbacksAndMessages(null);
-        setTorch(false);
+        stopMorseSignal();
 
         if (
                 countdownRunnable != null
@@ -1655,7 +2331,8 @@ public class SignalArchitectActivity extends AppCompatActivity {
 
         if (
                 countdownDialog != null &&
-                        countdownDialog.isShowing()
+                        countdownDialog
+                                .isShowing()
         ) {
 
             countdownDialog.dismiss();
